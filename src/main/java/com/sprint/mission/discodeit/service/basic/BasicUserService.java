@@ -30,7 +30,7 @@ public class BasicUserService implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public User create(UserDto.CreateRequest request) {
+    public UserDto.Response create(UserDto.CreateRequest request) {
         String username = request.username();
         String email = request.email();
         validateUser(null, username, email);
@@ -43,7 +43,12 @@ public class BasicUserService implements UserService {
 
         UserStatus userStatus = new UserStatus(createdUser.getId(), Instant.now());
         userStatusRepository.save(userStatus);
-        return createdUser;
+
+        // ------------------- 객체 반환 기본 버전 ----------------------- //
+        // return createdUser;
+
+        // ------------------- DTO 반환 변경 버전 ---------------------- //
+        return toDto(createdUser);
     }
 
     @Override
@@ -61,7 +66,7 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public User update(UUID userId, UserDto.UpdateRequest request) {
+    public UserDto.Response update(UUID userId, UserDto.UpdateRequest request) {
         User user=  userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + userId));
 
@@ -83,7 +88,12 @@ public class BasicUserService implements UserService {
             binaryContentRepository.deleteById(oldProfileId);
         }
 
-        return userRepository.save(user);
+        // ------------------- 객체 반환 기본 버전 ----------------------- //
+        // return userRepository.save(user);
+
+        // ------------------- DTO 반환 변경 버전 ---------------------- //
+        User savedUser = userRepository.save(user);
+        return toDto(savedUser);
     }
 
     // 트랜잭션은 aggregate 단위로만 묶는다.
@@ -119,7 +129,7 @@ public class BasicUserService implements UserService {
     }
 
     // Helper
-    private UserDto.Response toDto(User user) {
+    private UserDto.Response toDto(User user) { // UserStatus와 User를 결합하고 매퍼로 DTO로 변환
 
         // 현재는 요구사항에서 find, findAll이 유저 상태 정보를 같이 포함하라고 해서 강하게 결합했음
         // 유저 상태 정보가 손실되어도 유저는 정상적으로 작동해야 하므로 실제로는 예외 처리를 하면 안됨

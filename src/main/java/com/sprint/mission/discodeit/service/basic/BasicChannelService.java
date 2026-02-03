@@ -52,7 +52,7 @@ public class BasicChannelService implements ChannelService {
 
     @Transactional
     @Override
-    public Channel create(ChannelDto.CreateRequest request) {
+    public ChannelDto.Response create(ChannelDto.CreateRequest request) {
         if (request.type() == ChannelType.PUBLIC) {
             return createPublic(request.name(), request.description());
         }
@@ -64,12 +64,13 @@ public class BasicChannelService implements ChannelService {
         }
     }
 
-    private Channel createPublic(String name, String description) {
+    private ChannelDto.Response createPublic(String name, String description) {
         Channel channel = new Channel(ChannelType.PUBLIC, name, description);
-        return channelRepository.save(channel);
+        Channel createdChannel = channelRepository.save(channel);
+        return toDto(createdChannel);
     }
 
-    private Channel createPrivate(Set<UUID> memberIds) {
+    private ChannelDto.Response createPrivate(Set<UUID> memberIds) {
         memberIds.forEach(userId -> // 멤버가 실제로 존재하는 유저인지 확인
                 userRepository.findById(userId)
                             .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다." + userId)));
@@ -81,7 +82,8 @@ public class BasicChannelService implements ChannelService {
                 .map(userId -> new ReadStatus(userId, createChannel.getId(), createChannel.getCreatedAt()))
                 .forEach(readStatusRepository::save);
 
-        return createChannel;
+
+        return toDto(createChannel);
     }
 
     @Override
@@ -114,7 +116,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
-    public Channel update(UUID channelId, ChannelDto.UpdatePublicRequest request) {
+    public ChannelDto.Response update(UUID channelId, ChannelDto.UpdatePublicRequest request) {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new NoSuchElementException("해당 채널은 찾을 수 없습니다: " + channelId));
 
@@ -124,7 +126,8 @@ public class BasicChannelService implements ChannelService {
 
         channel.update(request.newName(), request.newDescription());
 
-        return channelRepository.save(channel);
+        Channel savedChannel = channelRepository.save(channel);
+        return toDto(savedChannel);
     }
 
     @Transactional
@@ -149,7 +152,7 @@ public class BasicChannelService implements ChannelService {
                     .map(ReadStatus::getUserId) // 채널 id를 가지고 있는 readStatus의 유저 id를 전부 가져옴, 즉 비공개 채널의 멤버 가져옴
                     .toList();
         } else {
-            memberIds = List.of();
+            memberIds = List.of(); // public 채널일 경우 멤버 비어있음.
         }
 
         return channelMapper.toResponse(channel, memberIds);

@@ -27,35 +27,35 @@ import java.util.Optional;
 @Validated
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class DiscodeitApplication {
-    static User setupUser(UserService userService) {
+    static UserDto.Response setupUser(UserService userService) {
         UserDto.CreateRequest request = new UserDto.CreateRequest("woody", "woody@codeit.com", "woody1234", null);
         return userService.create(request);
     }
 
-    static Channel setupChannel(ChannelService channelService) {
-        ChannelDto.CreatePublicRequest request = new ChannelDto.CreatePublicRequest("공지", "공지 채널입니다.");
+    static ChannelDto.Response setupChannel(ChannelService channelService) {
+        ChannelDto.CreateRequest request = new ChannelDto.CreateRequest(ChannelType.PUBLIC, "공지", "공지 채널입니다.", null);
         return channelService.create(request);
     }
 
     static void messageCreateTest(MessageService messageService, Channel channel, User author) {
         MessageDto.CreateRequest request = new MessageDto.CreateRequest("안녕하세요.", author.getId(), channel.getId(), null);
-        Message message = messageService.create(request);
-        System.out.println("메시지 생성: " + message.getId());
+        MessageDto.Response message = messageService.create(request);
+        //System.out.println("메시지 생성: " + message.getId());
     }
 
     public static void main(String[] args) {
 
         ConfigurableApplicationContext context = SpringApplication.run(DiscodeitApplication.class, args);
-        // 서비스 초기화
-        UserService userService = context.getBean(UserService.class);
-        ChannelService channelService = context.getBean(ChannelService.class);
-        MessageService messageService = context.getBean(MessageService.class);
-
-        // 셋업
-        User user = setupUser(userService);
-        Channel channel = setupChannel(channelService);
-        // 테스트
-        messageCreateTest(messageService, channel, user);
-        System.out.println("test");
+//        // 서비스 초기화
+//        UserService userService = context.getBean(UserService.class);
+//        ChannelService channelService = context.getBean(ChannelService.class);
+//        MessageService messageService = context.getBean(MessageService.class);
+//
+//        // 셋업
+//        User user = setupUser(userService);
+//        Channel channel = setupChannel(channelService);
+//        // 테스트
+//        messageCreateTest(messageService, channel, user);
+//        System.out.println("test");
     }
 }

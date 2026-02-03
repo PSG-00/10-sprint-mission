@@ -5,3 +5,9 @@ discodeit:
   repository:
     type: file   # jcf | file
     file-directory: .discodeit
+
+spring:
+  security:
+    user:
+      name: user       # 원하는 아이디
+      password: "$2a$12$hUYIrOsUnZuWfNCXuQczWONQQK7Joo6E48IIvO9SAwTFAwhNYqZHq" # 원하는 비밀번호
