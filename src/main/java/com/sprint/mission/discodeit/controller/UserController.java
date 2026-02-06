@@ -18,7 +18,6 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserDto.Response> createUser(@Valid @RequestBody UserDto.CreateRequest request) {
-        // 서비스가 DTO를 반환한다고 가정
         UserDto.Response response = userService.create(request);
         return ResponseEntity.ok(response);
     }

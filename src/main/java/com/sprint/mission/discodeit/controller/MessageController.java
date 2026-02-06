@@ -19,13 +19,11 @@ public class MessageController {
 
     @PostMapping
     public ResponseEntity<MessageDto.Response> createMessage(@Valid @RequestBody MessageDto.CreateRequest request) {
-        // 서비스가 DTO를 반환한다고 가정
         return ResponseEntity.ok(messageService.create(request));
     }
 
     @GetMapping
     public ResponseEntity<List<MessageDto.Response>> getMessages(@RequestParam UUID channelId) {
-        // 서비스의 findAllByChannelId가 List<MessageDto.Response>를 반환한다고 가정
         return ResponseEntity.ok(messageService.findAllByChannelId(channelId));
     }
 }

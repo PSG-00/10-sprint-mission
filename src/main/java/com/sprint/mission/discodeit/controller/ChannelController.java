@@ -19,8 +19,6 @@ public class ChannelController {
 
     @PostMapping
     public ResponseEntity<ChannelDto.Response> createChannel(@Valid @RequestBody ChannelDto.CreateRequest request) {
-        // 서비스가 create 시 DTO를 반환하도록 수정되었다고 가정 (원래는 Entity 반환이었음)
-        // 만약 서비스 수정을 안 했다면: return ResponseEntity.ok(channelService.find(createdEntity.getId()));
         return ResponseEntity.ok(channelService.create(request));
     }
 
