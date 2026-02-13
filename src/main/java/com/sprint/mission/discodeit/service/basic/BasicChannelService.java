@@ -33,24 +33,21 @@ public class BasicChannelService implements ChannelService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public ChannelDto.Response create(ChannelDto.CreateRequest request) {
-        if (request.type() == ChannelType.PUBLIC) {
-            return createPublic(request.name(), request.description());
-        }
-        else if (request.type() == ChannelType.PRIVATE) {
-            return createPrivate(request.memberIds());
-        }
-        else  {
-            throw new IllegalArgumentException("잘못된 채널 타입: " + request.type());
-        }
+    public ChannelDto.Response createPublic(ChannelDto.PublicChannelCreateRequest request) {
+        return createPublicInternal(request.name(), request.description());
     }
 
-    private ChannelDto.Response createPublic(String name, String description) {
+    @Override
+    public ChannelDto.Response createPrivate(ChannelDto.PrivateChannelCreateRequest request) {
+        return createPrivateInternal(request.participantIds());
+    }
+
+    private ChannelDto.Response createPublicInternal(String name, String description) {
         Channel channel = new Channel(ChannelType.PUBLIC, name, description);
         return toDto(channelRepository.save(channel));
     }
 
-    private ChannelDto.Response createPrivate(Set<UUID> memberIds) {
+    private ChannelDto.Response createPrivateInternal(Set<UUID> memberIds) {
         memberIds.forEach(userId -> // 멤버가 실제로 존재하는 유저인지 확인
                 userRepository.findById(userId)
                             .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다." + userId)));
@@ -128,18 +125,18 @@ public class BasicChannelService implements ChannelService {
 
     // Helper
     private ChannelDto.Response toDto(Channel channel) {
-        List<UUID> memberIds = new ArrayList<>();
+        List<UUID> participantIds = new ArrayList<>();
 
         if (channel.getType() == ChannelType.PRIVATE) { // private 채널일 경우
-            memberIds = readStatusRepository.findAllByChannelId(channel.getId()) // 채널 id에 맞는 readStatus 전부 가져옴
+            participantIds = readStatusRepository.findAllByChannelId(channel.getId()) // 채널 id에 맞는 readStatus 전부 가져옴
                     .stream()
                     .map(ReadStatus::getUserId) // 채널 id를 가지고 있는 readStatus의 유저 id를 전부 가져옴, 즉 비공개 채널의 멤버 가져옴
                     .toList();
         } else {
-            memberIds = List.of();
+            participantIds = List.of();
         }
 
-        return channelMapper.toResponse(channel, memberIds);
+        return channelMapper.toResponse(channel, participantIds);
     }
 
     @EventListener // 이벤트 구독

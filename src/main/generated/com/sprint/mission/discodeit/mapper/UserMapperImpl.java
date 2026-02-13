@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-02-13T14:23:23+0900",
+    date = "2026-02-13T16:42:09+0900",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.17 (Azul Systems, Inc.)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
 
     @Override
-    public UserDto.Response toResponse(User user, boolean Online) {
+    public UserDto.Response toResponse(User user, boolean online) {
         if ( user == null ) {
             return null;
         }
@@ -35,10 +35,10 @@ public class UserMapperImpl implements UserMapper {
             email = user.getEmail();
             profileId = user.getProfileId();
         }
-        boolean online = false;
-        online = Online;
+        boolean online1 = false;
+        online1 = online;
 
-        UserDto.Response response = new UserDto.Response( id, createdAt, updatedAt, username, email, profileId, online );
+        UserDto.Response response = new UserDto.Response( id, createdAt, updatedAt, username, email, profileId, online1 );
 
         return response;
     }

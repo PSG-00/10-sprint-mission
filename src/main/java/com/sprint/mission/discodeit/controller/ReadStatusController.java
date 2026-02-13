@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/read-statuses")
+@RequestMapping("/api/readStatuses")
 @RequiredArgsConstructor
 public class ReadStatusController {
     private final ReadStatusService readStatusService;
@@ -24,22 +24,16 @@ public class ReadStatusController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @RequestMapping(method = RequestMethod.PATCH, value = "/{read-status-id}")
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{readStatusId}")
     public ResponseEntity<ReadStatusDto.Response> updateReadStatus(
-            @PathVariable("read-status-id") UUID readStatusId,
+            @PathVariable("readStatusId") UUID readStatusId,
             @RequestBody ReadStatusDto.UpdateRequest request) {
         ReadStatusDto.Response response = readStatusService.update(readStatusId, request);
         return ResponseEntity.ok(response);
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<ReadStatusDto.Response> findReadStatus(@RequestParam("read-status-id") UUID readStatusId) {
-        ReadStatusDto.Response response = readStatusService.find(readStatusId);
-        return ResponseEntity.ok(response);
-    }
-
-    @RequestMapping(method = RequestMethod.GET, value = "/{user-id}")
-    public ResponseEntity<List<ReadStatusDto.Response>> findAllByUserId(@PathVariable("user-id") UUID userId) {
+    public ResponseEntity<List<ReadStatusDto.Response>> findAllByUserId(@RequestParam("userId") UUID userId) {
         List<ReadStatusDto.Response> response = readStatusService.findAllByUserId(userId);
         return ResponseEntity.ok(response);
     }

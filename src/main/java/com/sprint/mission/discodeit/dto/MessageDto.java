@@ -39,6 +39,6 @@ public class MessageDto {
     ) {}
 
     public record UpdateRequest(
-            String content
+            String newContent
     ) {}
 }

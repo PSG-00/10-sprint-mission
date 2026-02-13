@@ -8,7 +8,7 @@ import java.util.UUID;
 public class UserStatusDto {
     public record CreateRequest(
             @NotNull(message = "유저 ID는 필수입니다.")
-            UUID userid,
+            UUID userId,
             Instant lastActiveAt
     ) {}
 
@@ -17,7 +17,8 @@ public class UserStatusDto {
             Instant createdAt,
             Instant updatedAt,
             UUID userId,
-            Instant lastActiveAt
+            Instant lastActiveAt,
+            boolean online
     ) {}
 
     public record UpdateRequest(

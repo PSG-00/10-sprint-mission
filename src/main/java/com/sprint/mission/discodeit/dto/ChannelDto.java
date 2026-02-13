@@ -12,16 +12,16 @@ import java.util.Set;
 import java.util.UUID;
 
 public class ChannelDto {
-//    public record CreatePublicRequest(
-//            @NotBlank
-//            String name,
-//            String description
-//
-//    ) {}
-//    public record CreatePrivateRequest(
-//            List<UUID> memberIds
-//
-//    ) {}
+    public record PublicChannelCreateRequest(
+            @NotBlank(message = "채널 이름은 필수입니다.")
+            String name,
+            String description
+    ) {}
+
+    public record PrivateChannelCreateRequest(
+            @NotNull(message = "참여자 목록은 필수입니다.")
+            Set<UUID> participantIds
+    ) {}
 
     public record CreateRequest(
             @NotNull(message = "채널 타입은 필수입니다.")
@@ -47,7 +47,7 @@ public class ChannelDto {
             ChannelType type,
             String name,
             String description,
-            List<UUID> memberIds,
+            List<UUID> participantIds,
             Instant lastMessageAt
     ) {}
 
