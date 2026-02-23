@@ -20,7 +20,8 @@ public class UserStatusDto {
             Instant createdAt,
             Instant updatedAt,
             UUID userId,
-            Instant lastActiveAt
+            Instant lastActiveAt,
+            boolean online
     ) {}
 
     @Schema(name = "UserStatusUpdateRequest", description = "변경할 User 온라인 상태 정보")

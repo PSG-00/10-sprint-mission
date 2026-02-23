@@ -27,6 +27,8 @@ public class ChannelDto {
     @Schema(name = "ChannelResponse", description = "Channel 응답 정보")
     public record Response(
             UUID id,
+            Instant createdAt,
+            Instant updatedAt,
             ChannelType type,
             String name,
             String description,
