@@ -54,6 +54,9 @@ public class BasicReadStatusService implements ReadStatusService {
 
     @Override
     public List<ReadStatusDto.Response> findAllByUserId(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NoSuchElementException("해당 유저를 찾을 수 없습니다:" + userId);
+        }
         return readStatusRepository.findAllByUserId(userId).stream()
                 .map(readStatusMapper::toResponse)
                 .toList();
