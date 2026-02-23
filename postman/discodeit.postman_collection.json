@@ -1,0 +1,698 @@
+{
+  "info": {
+    "_postman_id": "86b14f22-9652-41bc-87b5-7116f6b5b29d",
+    "name": "디스코드잇 테스트",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38605793"
+  },
+  "item": [
+    {
+      "name": "유저 생성",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "userCreateRequest",
+              "value": "{\n  \"email\": \"test@example.com\",\n  \"username\": \"test\",\n  \"password\": \"1234\"\n}",
+              "type": "text",
+              "uuid": "195e30b6-76ce-4326-a3d5-169c1ea127aa",
+              "contentType": "application/json"
+            },
+            {
+              "key": "profile",
+              "type": "file",
+              "uuid": "953f7feb-de66-410a-bfbc-5e7bd1b56896",
+              "src": "/C:/Users/psg00/Downloads/coffee.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "읽음 상태 생성",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"userId\":\"e9507ad4-d128-4633-976a-ac58fb4d8ac5\",\r\n\"channelId\":\"d002ca50-2d6f-4eeb-bdc9-89dc9bddb6c9\",\r\n\"lastReadAt\":\"\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/readStatuses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "readStatuses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "메시지 전송",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "messageCreateRequest",
+              "value": "{\"content\": \"test 메시지 전송\",\n\"authorId\": \"e9507ad4-d128-4633-976a-ac58fb4d8ac5\",\n\"channelId\": \"66227de7-8e66-4745-a0ad-f0ab57b4812b \"}",
+              "type": "text",
+              "uuid": "525f18f5-e198-4613-9e40-a94028570655",
+              "contentType": "application/json"
+            },
+            {
+              "key": "attachments",
+              "type": "file",
+              "uuid": "6398d372-3dc6-4488-a117-544585b951b5",
+              "src": [
+                "/C:/Users/psg00/Downloads/테스트.png",
+                "/C:/Users/psg00/Downloads/test2.png"
+              ]
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/messages",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "messages"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "채널 생성 public",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"자바-백엔드-스터디\",\r\n    \"description\": \"스프링과 자바를 공부하는 공개 채널입니다.\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/channels/public",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "channels",
+            "public"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "채널 생성 private",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"participantIds\": [\"e9507ad4-d128-4633-976a-ac58fb4d8ac5\"]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/channels/private",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "channels",
+            "private"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "유저 상태 업데이트",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"newLastActiveAt\": \"2026-02-07T14:30:01Z\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/e9507ad4-d128-4633-976a-ac58fb4d8ac5/userStatus",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "e9507ad4-d128-4633-976a-ac58fb4d8ac5",
+            "userStatus"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "단건 유저 조회",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/e9507ad4-d128-4633-976a-ac58fb4d8ac5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "e9507ad4-d128-4633-976a-ac58fb4d8ac5"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "UserStatus 조회",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/userStatuses/e9507ad4-d128-4633-976a-ac58fb4d8ac5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "userStatuses",
+            "e9507ad4-d128-4633-976a-ac58fb4d8ac5"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "파일 한 개 조회",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/binaryContents/419ddd17-0186-41dc-ac18-7b5e4208a050",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "binaryContents",
+            "419ddd17-0186-41dc-ac18-7b5e4208a050"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "파일 여러 개 조회",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/binaryContents?binaryContentIds=419ddd17-0186-41dc-ac18-7b5e4208a050&binaryContentIds=03d1c659-517b-4fa6-994d-7b5459ce0008",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "binaryContents"
+          ],
+          "query": [
+            {
+              "key": "binaryContentIds",
+              "value": "419ddd17-0186-41dc-ac18-7b5e4208a050"
+            },
+            {
+              "key": "binaryContentIds",
+              "value": "03d1c659-517b-4fa6-994d-7b5459ce0008"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "읽음 상태 조회",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/readStatuses/4b899adf-6369-4d30-91e7-d2430795cede",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "readStatuses",
+            "4b899adf-6369-4d30-91e7-d2430795cede"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "읽음 상태 조회 userid",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/readStatuses?userId=e9507ad4-d128-4633-976a-ac58fb4d8ac5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "readStatuses"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "e9507ad4-d128-4633-976a-ac58fb4d8ac5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "다건 유저 조회",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "채널 조회 userid로",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"type\": \"PUBLIC\",\r\n    \"name\": \"자바-백엔드-스터디\",\r\n    \"description\": \"스프링과 자바를 공부하는 공개 채널입니다.\"\r\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/channels?userId=e9507ad4-d128-4633-976a-ac58fb4d8ac5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "channels"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "e9507ad4-d128-4633-976a-ac58fb4d8ac5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "채널 조회 전체",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"type\": \"PUBLIC\",\r\n    \"name\": \"자바-백엔드-스터디\",\r\n    \"description\": \"스프링과 자바를 공부하는 공개 채널입니다.\"\r\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/channels/findAll",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "channels",
+            "findAll"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "메시지 조회 채널id로",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/messages?channelId=66227de7-8e66-4745-a0ad-f0ab57b4812b ",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "messages"
+          ],
+          "query": [
+            {
+              "key": "channelId",
+              "value": "66227de7-8e66-4745-a0ad-f0ab57b4812b "
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "유저 수정",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "userUpdateRequest",
+              "value": "{\"newUsername\": \"test2수정\"}",
+              "type": "text",
+              "uuid": "195e30b6-76ce-4326-a3d5-169c1ea127aa",
+              "contentType": "application/json"
+            },
+            {
+              "key": "profile",
+              "type": "file",
+              "uuid": "392acdc1-8e71-48bb-9066-1875e7f5f52c",
+              "contentType": "",
+              "src": "/C:/Users/psg00/Downloads/coffee.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/f124623c-7c3d-4a75-9aac-879c5982db8e",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "f124623c-7c3d-4a75-9aac-879c5982db8e"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "읽음 상태 수정",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"newLastReadAt\":\"2026-02-07T14:30:01Z\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/readStatuses/4b899adf-6369-4d30-91e7-d2430795cede",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "readStatuses",
+            "4b899adf-6369-4d30-91e7-d2430795cede"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "채널 수정",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"newName\": \"채널 수정\",\r\n\"newDescription\": \"설명은1234\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/channels/66227de7-8e66-4745-a0ad-f0ab57b4812b",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "channels",
+            "66227de7-8e66-4745-a0ad-f0ab57b4812b"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "메시지 수정",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"newContent\":\"메시지수정\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/messages/e81c67aa-0f52-440f-b9a9-4497c706ebd8",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "messages",
+            "e81c67aa-0f52-440f-b9a9-4497c706ebd8"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "유저 로그인",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\":\"test\",\r\n    \"password\":\"1234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "유저 삭제",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "request",
+              "value": "{\"newUsername\": \"테스터수정\",\n\"newPassword\": \"password123!\"}",
+              "type": "text",
+              "uuid": "195e30b6-76ce-4326-a3d5-169c1ea127aa",
+              "contentType": "application/json"
+            },
+            {
+              "key": "profileImage",
+              "type": "file",
+              "uuid": "392acdc1-8e71-48bb-9066-1875e7f5f52c",
+              "contentType": "",
+              "src": "/C:/Users/psg00/Downloads/coffee.jpg",
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/f124623c-7c3d-4a75-9aac-879c5982db8e",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "f124623c-7c3d-4a75-9aac-879c5982db8e"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "채널 삭제",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "request",
+              "value": "{\"newUsername\": \"테스터수정\",\n\"newPassword\": \"password123!\"}",
+              "type": "text",
+              "uuid": "195e30b6-76ce-4326-a3d5-169c1ea127aa",
+              "contentType": "application/json"
+            },
+            {
+              "key": "profileImage",
+              "type": "file",
+              "uuid": "392acdc1-8e71-48bb-9066-1875e7f5f52c",
+              "contentType": "",
+              "src": "/C:/Users/psg00/Downloads/coffee.jpg",
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/channels/bfdee8ce-a215-4e53-b982-1622cf91b416",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "channels",
+            "bfdee8ce-a215-4e53-b982-1622cf91b416"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "메시지 삭제",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "request",
+              "value": "{\"newUsername\": \"테스터수정\",\n\"newPassword\": \"password123!\"}",
+              "type": "text",
+              "uuid": "195e30b6-76ce-4326-a3d5-169c1ea127aa",
+              "contentType": "application/json",
+              "disabled": true
+            },
+            {
+              "key": "profileImage",
+              "type": "file",
+              "uuid": "392acdc1-8e71-48bb-9066-1875e7f5f52c",
+              "contentType": "",
+              "src": "/C:/Users/psg00/Downloads/coffee.jpg",
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/messages/50d709ae-f3cd-4360-b0e0-1e64ac54d5a1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "messages",
+            "50d709ae-f3cd-4360-b0e0-1e64ac54d5a1"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": ""
+    }
+  ]
+}
