@@ -1,9 +1,9 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.controller.api.MessageApi;
 import com.sprint.mission.discodeit.dto.MessageDto;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,11 +18,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
-@Tag(name = "Message", description = "Message API")
-public class MessageController {
+public class MessageController implements MessageApi {
     private final MessageService messageService;
     private final BinaryContentService binaryContentService;
 
+    @Override
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MessageDto.Response> createMessage(
@@ -32,6 +32,7 @@ public class MessageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.PATCH, value = "/{messageId}")
     public ResponseEntity<MessageDto.Response> updateMessage(
             @PathVariable("messageId") UUID messageId,
@@ -40,12 +41,14 @@ public class MessageController {
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.GET, value = "/{messageId}")
     public ResponseEntity<MessageDto.Response> findMessage(@PathVariable("messageId") UUID messageId) {
         MessageDto.Response response = messageService.find(messageId);
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @RequestMapping(method = RequestMethod.DELETE, value = "/{messageId}")
     public ResponseEntity<Void> deleteMessage(@PathVariable("messageId") UUID messageId) {
@@ -53,6 +56,7 @@ public class MessageController {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<MessageDto.Response>> findAllByChannel(@RequestParam("channelId") UUID channelId) {
         List<MessageDto.Response> response = messageService.findAllByChannelId(channelId);

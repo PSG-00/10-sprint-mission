@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-02-23T10:28:28+0900",
+    date = "2026-02-23T13:48:42+0900",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.17 (Azul Systems, Inc.)"
 )
 @Component
@@ -25,16 +25,12 @@ public class ChannelMapperImpl implements ChannelMapper {
         }
 
         UUID id = null;
-        Instant createdAt = null;
-        Instant updatedAt = null;
         ChannelType type = null;
         String name = null;
         String description = null;
         Instant lastMessageAt = null;
         if ( channel != null ) {
             id = channel.getId();
-            createdAt = channel.getCreatedAt();
-            updatedAt = channel.getUpdatedAt();
             type = channel.getType();
             name = channel.getName();
             description = channel.getDescription();
@@ -46,7 +42,7 @@ public class ChannelMapperImpl implements ChannelMapper {
             participantIds1 = new ArrayList<UUID>( list );
         }
 
-        ChannelDto.Response response = new ChannelDto.Response( id, createdAt, updatedAt, type, name, description, participantIds1, lastMessageAt );
+        ChannelDto.Response response = new ChannelDto.Response( id, type, name, description, participantIds1, lastMessageAt );
 
         return response;
     }

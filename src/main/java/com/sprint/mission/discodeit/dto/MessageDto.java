@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class MessageDto {
-    @Schema(description = "Message 생성 정보")
+    @Schema(name = "MessageCreateRequest", description = "Message 생성 정보")
     public record CreateRequest(
             String content,
             @NotNull(message = "유저 ID는 필수입니다.")
@@ -18,7 +18,7 @@ public class MessageDto {
 
     ) {}
 
-    @Schema(description = "Message 응답 정보")
+    @Schema(name = "MessageResponse", description = "Message 응답 정보")
     public record Response(
             UUID id,
             Instant createdAt,
@@ -29,8 +29,8 @@ public class MessageDto {
             List<UUID> attachmentIds
     ) {}
 
+    @Schema(name = "MessageUpdateRequest", description = "수정할 Message 내용")
     public record UpdateRequest(
-            @Schema(description = "수정할 Message 내용")
             String newContent
     ) {}
 }

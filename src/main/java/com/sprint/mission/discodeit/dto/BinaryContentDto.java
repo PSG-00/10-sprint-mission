@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -7,6 +8,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public class BinaryContentDto {
+    @Schema(name = "BinaryContentCreateRequest", description = "BinaryContent 생성 정보")
     public record CreateRequest(
             @NotBlank
             String fileName,
@@ -15,9 +17,10 @@ public class BinaryContentDto {
             String contentType,
 
             @NotNull
-            byte[] content
+            byte[] bytes
     ) {}
 
+    @Schema(name = "BinaryContentResponse", description = "BinaryContent 응답 정보")
     public record Response(
             UUID id,
             Instant createdAt,

@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.controller.api.UserStatusApi;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +15,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/userStatuses")
 @RequiredArgsConstructor
-public class UserStatusController {
+public class UserStatusController implements UserStatusApi {
 
     private final UserStatusRepository userStatusRepository;
 
+    @Override
     @GetMapping("/{userId}")
     public ResponseEntity<UserStatus> findByUserId(@PathVariable UUID userId) {
 
