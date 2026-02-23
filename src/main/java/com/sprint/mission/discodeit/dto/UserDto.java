@@ -1,11 +1,13 @@
 package com.sprint.mission.discodeit.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
 import java.time.Instant;
 import java.util.UUID;
 
 public class UserDto {
+    @Schema(name = "UserCreateRequest", description = "User 생성 정보")
     public record CreateRequest(
             @NotBlank(message = "사용자명은 필수입니다.")
             @Pattern(regexp = "^\\S+$", message = "사용자 이름에 공백을 포함할 수 없습니다.")
@@ -20,6 +22,7 @@ public class UserDto {
             String password
     ) {}
 
+    @Schema(name = "UserResponse", description = "User 응답 정보")
     public record Response(
             UUID id,
             Instant createdAt,
@@ -30,6 +33,7 @@ public class UserDto {
             boolean online       // UserStatus에서 계산된 값
     ) {}
 
+    @Schema(name = "UserUpdateRequest", description = "수정할 User 정보")
     public record UpdateRequest(
             @Pattern(regexp = "^\\S*$", message = "새 사용자 이름에 공백을 포함할 수 없습니다.")
             String newUsername,

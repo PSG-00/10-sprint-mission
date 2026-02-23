@@ -1,19 +1,16 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.dto.BinaryContentDto;
+import com.sprint.mission.discodeit.controller.api.UserApi;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserStatusDto;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,12 +20,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-public class UserController {
+public class UserController implements UserApi {
 
     private final UserService userService;
     private final UserStatusService userStatus;
     private final BinaryContentService binaryContentService;
 
+    @Override
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserDto.Response> createUser(
             @RequestPart("userCreateRequest") @Valid UserDto.CreateRequest request,
@@ -37,6 +35,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.PATCH, value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserDto.Response> updateUser(
             @PathVariable("userId") UUID userId,
@@ -46,24 +45,28 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.DELETE, value = "/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable("userId") UUID userId) {
         userService.delete(userId);
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.GET, value = "/{userId}")
     public ResponseEntity<UserDto.Response> findUser(@PathVariable("userId") UUID userId) {
         UserDto.Response response = userService.find(userId);
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<UserDto.Response>> findAllUser() {
         List<UserDto.Response> response = userService.findAll();
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.PATCH, value = "/{userId}/userStatus")
     public ResponseEntity<UserStatusDto.Response> patchUserStatus(
             @PathVariable("userId") UUID userId,

@@ -40,9 +40,9 @@ public class BasicBinaryContentService implements BinaryContentService {
     public BinaryContentDto.Response create(BinaryContentDto.CreateRequest request) {
         String fileName = request.fileName();
         String contentType = request.contentType();
-        byte[] content = request.content();
+        byte[] bytes = request.bytes();
 
-        BinaryContent binaryContent = new BinaryContent(fileName, contentType, content);
+        BinaryContent binaryContent = new BinaryContent(fileName, contentType, bytes);
         return binaryContentMapper.toResponse(binaryContentRepository.save(binaryContent));
     }
 

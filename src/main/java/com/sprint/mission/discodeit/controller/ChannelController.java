@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.controller.api.ChannelApi;
 import com.sprint.mission.discodeit.dto.ChannelDto;
-import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.service.ChannelService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +15,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/channels")
 @RequiredArgsConstructor
-public class ChannelController {
+public class ChannelController implements ChannelApi {
 
     private final ChannelService channelService;
 
+    @Override
     @RequestMapping(method = RequestMethod.POST, value = "/public")
     public ResponseEntity<ChannelDto.Response> createPublicChannel(
             @RequestBody @Valid ChannelDto.PublicChannelCreateRequest request) {
@@ -26,6 +27,7 @@ public class ChannelController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.POST, value = "/private")
     public ResponseEntity<ChannelDto.Response> createPrivateChannel(
             @RequestBody @Valid ChannelDto.PrivateChannelCreateRequest request) {
@@ -33,7 +35,7 @@ public class ChannelController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
+    @Override
     @RequestMapping(method = RequestMethod.PATCH, value = "/{channelId}")
     public ResponseEntity<ChannelDto.Response> updateChannel(
             @PathVariable("channelId") UUID channelId,
@@ -42,25 +44,28 @@ public class ChannelController {
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.DELETE, value = "/{channelId}")
     public ResponseEntity<Void> deleteChannel(@PathVariable("channelId") UUID channelId) {
         channelService.delete(channelId);
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.GET, value = "/{channelId}")
     public ResponseEntity<ChannelDto.Response> findChannel(@PathVariable("channelId") UUID channelId) {
         ChannelDto.Response response = channelService.find(channelId);
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<ChannelDto.Response>> findAllByUser(@RequestParam("userId") UUID userId) {
         List<ChannelDto.Response> response = channelService.findAllByUserId(userId);
         return ResponseEntity.ok(response);
     }
 
-    // 관리자용 전체 채널 조회 API
+    @Override
     @RequestMapping(method = RequestMethod.GET, value = "/findAll")
     public ResponseEntity<List<ChannelDto.Response>> findAllChannels() {
         List<ChannelDto.Response> response = channelService.findAll();
