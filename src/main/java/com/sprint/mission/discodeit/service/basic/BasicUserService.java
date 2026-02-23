@@ -4,23 +4,18 @@ import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.event.ChannelDeletedEvent;
 import com.sprint.mission.discodeit.event.ChannelNoMemberEvent;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
-import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
-import lombok.Locked;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,11 +33,10 @@ public class BasicUserService implements UserService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public UserDto.Response create(UserDto.CreateRequest request) {
+    public UserDto.Response create(UserDto.CreateRequest request, UUID profileId) {
         String username = request.username();
         String email = request.email();
         validateUser(null, username, email);
-        UUID profileId = request.profileId();
         String password = passwordEncoder.encode(request.password());
 
         User user = new User(username, email, password, profileId);
@@ -68,7 +62,7 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public UserDto.Response update(UUID userId, UserDto.UpdateRequest request) {
+    public UserDto.Response update(UUID userId, UserDto.UpdateRequest request, UUID newProfileId) {
         User user=  userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + userId));
 
@@ -83,7 +77,7 @@ public class BasicUserService implements UserService {
         }
 
         // password 업데이트는 엔티티 내 메서드를 따로 만들어서 책임 분리로 개선할 여지가 있음
-        user.update(request.newUsername(), request.newEmail(), encodedPassword, request.profileId());
+        user.update(request.newUsername(), request.newEmail(), encodedPassword, newProfileId);
         User updatedUser = userRepository.save(user);
 
         return toDto(updatedUser);

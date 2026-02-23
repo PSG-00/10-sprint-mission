@@ -1,7 +1,9 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.MessageDto;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,44 +18,53 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
+@Tag(name = "Message", description = "Message API")
 public class MessageController {
     private final MessageService messageService;
+    private final BinaryContentService binaryContentService;
 
-    /**
-     * @param request      메시지 본문 및 관련 ID (JSON)
-     * @param attachments  첨부파일 리스트 (선택 사항)
-     */
-
-    @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<MessageDto.Response> createMessage(@RequestBody @Valid MessageDto.CreateRequest request){
-        MessageDto.Response response = messageService.create(request);
+    @ResponseStatus(HttpStatus.CREATED)
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MessageDto.Response> createMessage(
+            @RequestPart("messageCreateRequest") @Valid MessageDto.CreateRequest request,
+            @RequestPart(value = "attachments", required = false) List<MultipartFile> files){
+        MessageDto.Response response = messageService.create(request, uploadMessageFiles(files));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @RequestMapping(method = RequestMethod.PATCH, value = "/{message-id}")
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{messageId}")
     public ResponseEntity<MessageDto.Response> updateMessage(
-            @PathVariable("message-id") UUID messageId,
+            @PathVariable("messageId") UUID messageId,
             @RequestBody @Valid MessageDto.UpdateRequest request) {
         MessageDto.Response response = messageService.update(messageId, request);
         return ResponseEntity.ok(response);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/{message-id}")
-    public ResponseEntity<MessageDto.Response> findMessage(@PathVariable("message-id") UUID messageId) {
+    @RequestMapping(method = RequestMethod.GET, value = "/{messageId}")
+    public ResponseEntity<MessageDto.Response> findMessage(@PathVariable("messageId") UUID messageId) {
         MessageDto.Response response = messageService.find(messageId);
         return ResponseEntity.ok(response);
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{message-id}")
-    public ResponseEntity<Void> deleteMessage(@PathVariable("message-id") UUID messageId) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{messageId}")
+    public ResponseEntity<Void> deleteMessage(@PathVariable("messageId") UUID messageId) {
         messageService.delete(messageId);
         return ResponseEntity.noContent().build();
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<MessageDto.Response>> findAllByChannel(@RequestParam("channel-id") UUID channelId) {
+    public ResponseEntity<List<MessageDto.Response>> findAllByChannel(@RequestParam("channelId") UUID channelId) {
         List<MessageDto.Response> response = messageService.findAllByChannelId(channelId);
         return ResponseEntity.ok(response);
+    }
+
+    public List<UUID> uploadMessageFiles(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) return List.of();
+
+        return files.stream()
+                .map(file -> binaryContentService.create(binaryContentService.multipartFileToCreateRequest(file)).id())
+                .toList();
     }
 
 }

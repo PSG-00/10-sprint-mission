@@ -23,23 +23,15 @@ public class ChannelDto {
 //
 //    ) {}
 
-    public record CreateRequest(
+    public record PublicChannelCreateRequest(
             @NotNull(message = "채널 타입은 필수입니다.")
-            ChannelType type,
             String name,
-            String description,
-            Set<UUID> memberIds // 유저 중복 검출
-    ) {
-        @AssertTrue(message = "공개 채널은 이름이 필수이고, 비공개 채널은 멤버가 필수입니다.")
-        public boolean isValid() {
-        if (type == ChannelType.PUBLIC) {
-            return StringUtils.hasText(name); // 이름 필수
-        } else if (type == ChannelType.PRIVATE) {
-            return memberIds != null && !memberIds.isEmpty(); // 멤버 필수
-        }
-        return false;
-    }}
-
+            String description
+    ) {}
+    public record PrivateChannelCreateRequest(
+            @NotNull(message = "비공개 채널은 참여자 목록이 필수입니다.")
+            Set<UUID> participantIds
+    ) {}
     public record Response(
             UUID id,
             Instant createdAt,
@@ -55,6 +47,5 @@ public class ChannelDto {
             @NotBlank(message = "채널 이름은 필수입니다.")
             String newName,
             String newDescription
-
     ){}
 }

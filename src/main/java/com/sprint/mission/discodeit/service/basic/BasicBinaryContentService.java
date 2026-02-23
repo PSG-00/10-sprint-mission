@@ -7,7 +7,10 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -19,7 +22,21 @@ public class BasicBinaryContentService implements BinaryContentService {
     //
     private final BinaryContentMapper binaryContentMapper;
 
+
     @Override
+    public BinaryContentDto.CreateRequest multipartFileToCreateRequest(MultipartFile file) {
+        try {
+            return new BinaryContentDto.CreateRequest(
+                    file.getOriginalFilename(),
+                    file.getContentType(),
+                    file.getBytes()
+            );
+        } catch (IOException e) {
+            throw new UncheckedIOException("파일 읽기 오류", e);
+        }
+    }
+
+   @Override
     public BinaryContentDto.Response create(BinaryContentDto.CreateRequest request) {
         String fileName = request.fileName();
         String contentType = request.contentType();

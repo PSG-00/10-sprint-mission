@@ -32,33 +32,20 @@ public class BasicChannelService implements ChannelService {
     //
     private final ApplicationEventPublisher eventPublisher;
 
-    @Override
-    public ChannelDto.Response create(ChannelDto.CreateRequest request) {
-        if (request.type() == ChannelType.PUBLIC) {
-            return createPublic(request.name(), request.description());
-        }
-        else if (request.type() == ChannelType.PRIVATE) {
-            return createPrivate(request.memberIds());
-        }
-        else  {
-            throw new IllegalArgumentException("잘못된 채널 타입: " + request.type());
-        }
-    }
-
-    private ChannelDto.Response createPublic(String name, String description) {
-        Channel channel = new Channel(ChannelType.PUBLIC, name, description);
+    public ChannelDto.Response create(ChannelDto.PublicChannelCreateRequest request) {
+        Channel channel = new Channel(ChannelType.PUBLIC, request.name(), request.description());
         return toDto(channelRepository.save(channel));
     }
 
-    private ChannelDto.Response createPrivate(Set<UUID> memberIds) {
-        memberIds.forEach(userId -> // 멤버가 실제로 존재하는 유저인지 확인
+    public ChannelDto.Response create(ChannelDto.PrivateChannelCreateRequest request) {
+        request.participantIds().forEach(userId -> // 멤버가 실제로 존재하는 유저인지 확인
                 userRepository.findById(userId)
                             .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다." + userId)));
 
         Channel channel = new Channel(ChannelType.PRIVATE, null, null);
         Channel createChannel = channelRepository.save(channel);
 
-        memberIds.stream()
+        request.participantIds().stream()
                 .map(userId -> new ReadStatus(userId, createChannel.getId(), createChannel.getCreatedAt()))
                 .forEach(readStatusRepository::save);
 

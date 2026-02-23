@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.dto.LoginDto;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class AuthController {
     private final AuthService authService;
 
     @RequestMapping(method = RequestMethod.POST, value = "/login")
-    public ResponseEntity<UserDto.Response> login(@RequestBody LoginDto.LoginRequest request) {
+    public ResponseEntity<UserDto.Response> login(@RequestBody @Valid LoginDto.LoginRequest request) {
         UserDto.Response response = authService.login(request);
         // todo: 여기다가 로그인 유지를 위한 세션을 생성해야 할 듯
         return ResponseEntity.status(HttpStatus.OK).body(response);
