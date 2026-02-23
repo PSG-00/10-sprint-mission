@@ -1,10 +1,7 @@
 package com.sprint.mission.discodeit.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -34,6 +31,6 @@ public class MessageDto {
 
     public record UpdateRequest(
             @Schema(description = "수정할 Message 내용")
-            String content
+            String newContent
     ) {}
 }

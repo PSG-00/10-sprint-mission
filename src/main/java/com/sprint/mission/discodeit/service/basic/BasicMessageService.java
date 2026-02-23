@@ -71,7 +71,7 @@ public class BasicMessageService implements MessageService {
 
     @Override
     public MessageDto.Response update(UUID messageId, MessageDto.UpdateRequest request) {
-        String newContent = request.content();
+        String newContent = request.newContent();
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new NoSuchElementException("해당 메시지를 찾을 수 없습니다: " + messageId));
         message.update(newContent);

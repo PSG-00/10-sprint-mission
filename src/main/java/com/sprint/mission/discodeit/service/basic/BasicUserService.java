@@ -72,10 +72,6 @@ public class BasicUserService implements UserService {
                 ? passwordEncoder.encode(request.newPassword())
                 : null;
 
-        if (Boolean.TRUE.equals(request.isProfileDeleted())) {
-            user.deleteProfile(); // 여기서 this.profileId = null; 실행
-        }
-
         // password 업데이트는 엔티티 내 메서드를 따로 만들어서 책임 분리로 개선할 여지가 있음
         user.update(request.newUsername(), request.newEmail(), encodedPassword, newProfileId);
         User updatedUser = userRepository.save(user);

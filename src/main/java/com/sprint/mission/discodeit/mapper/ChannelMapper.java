@@ -11,6 +11,6 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface ChannelMapper {
 
-    @Mapping(target = "memberIds", source = "memberIds")
-    ChannelDto.Response toResponse(Channel channel, List<UUID> memberIds);
+    @Mapping(target = "participantIds", source = "participantIds")
+    ChannelDto.Response toResponse(Channel channel, List<UUID> participantIds);
 }

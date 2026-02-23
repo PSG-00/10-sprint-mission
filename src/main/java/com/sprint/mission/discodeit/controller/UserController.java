@@ -32,8 +32,8 @@ public class UserController {
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserDto.Response> createUser(
             @RequestPart("userCreateRequest") @Valid UserDto.CreateRequest request,
-            @RequestPart(required = false) MultipartFile file) {
-        UserDto.Response response = userService.create(request, uploadProfile(file));
+            @RequestPart(value = "profile", required = false) MultipartFile profile) {
+        UserDto.Response response = userService.create(request, uploadProfile(profile));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -41,8 +41,8 @@ public class UserController {
     public ResponseEntity<UserDto.Response> updateUser(
             @PathVariable("userId") UUID userId,
             @RequestPart("userUpdateRequest") @Valid UserDto.UpdateRequest request,
-            @RequestPart (value = "profile", required = false) MultipartFile file) {
-        UserDto.Response response = userService.update(userId, request, uploadProfile(file));
+            @RequestPart (value = "profile", required = false) MultipartFile profile) {
+        UserDto.Response response = userService.update(userId, request, uploadProfile(profile));
         return ResponseEntity.ok(response);
     }
 
