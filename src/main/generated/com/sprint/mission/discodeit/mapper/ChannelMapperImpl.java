@@ -12,15 +12,15 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-02-15T23:04:02+0900",
+    date = "2026-02-23T10:28:28+0900",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.17 (Azul Systems, Inc.)"
 )
 @Component
 public class ChannelMapperImpl implements ChannelMapper {
 
     @Override
-    public ChannelDto.Response toResponse(Channel channel, List<UUID> memberIds) {
-        if ( channel == null && memberIds == null ) {
+    public ChannelDto.Response toResponse(Channel channel, List<UUID> participantIds) {
+        if ( channel == null && participantIds == null ) {
             return null;
         }
 
@@ -40,13 +40,13 @@ public class ChannelMapperImpl implements ChannelMapper {
             description = channel.getDescription();
             lastMessageAt = channel.getLastMessageAt();
         }
-        List<UUID> memberIds1 = null;
-        List<UUID> list = memberIds;
+        List<UUID> participantIds1 = null;
+        List<UUID> list = participantIds;
         if ( list != null ) {
-            memberIds1 = new ArrayList<UUID>( list );
+            participantIds1 = new ArrayList<UUID>( list );
         }
 
-        ChannelDto.Response response = new ChannelDto.Response( id, createdAt, updatedAt, type, name, description, memberIds1, lastMessageAt );
+        ChannelDto.Response response = new ChannelDto.Response( id, createdAt, updatedAt, type, name, description, participantIds1, lastMessageAt );
 
         return response;
     }

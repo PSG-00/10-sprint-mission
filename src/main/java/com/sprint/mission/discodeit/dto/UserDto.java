@@ -39,9 +39,6 @@ public class UserDto {
 
             @Size(min = 4, message = "비밀번호는 최소 4자 이상이어야 합니다.")
             @Pattern(regexp = "^\\S*$", message = "새 비밀번호에 공백을 포함할 수 없습니다.")
-            String newPassword,
-
-            // 요구 사항 외 구현, 유저 수정 시 프로필 삭제 여부
-            Boolean isProfileDeleted
+            String newPassword
     ) {}
 }

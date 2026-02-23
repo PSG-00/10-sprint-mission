@@ -115,18 +115,18 @@ public class BasicChannelService implements ChannelService {
 
     // Helper
     private ChannelDto.Response toDto(Channel channel) {
-        List<UUID> memberIds = new ArrayList<>();
+        List<UUID> participantIds = new ArrayList<>();
 
         if (channel.getType() == ChannelType.PRIVATE) { // private 채널일 경우
-            memberIds = readStatusRepository.findAllByChannelId(channel.getId()) // 채널 id에 맞는 readStatus 전부 가져옴
+            participantIds = readStatusRepository.findAllByChannelId(channel.getId()) // 채널 id에 맞는 readStatus 전부 가져옴
                     .stream()
                     .map(ReadStatus::getUserId) // 채널 id를 가지고 있는 readStatus의 유저 id를 전부 가져옴, 즉 비공개 채널의 멤버 가져옴
                     .toList();
         } else {
-            memberIds = List.of();
+            participantIds = List.of();
         }
 
-        return channelMapper.toResponse(channel, memberIds);
+        return channelMapper.toResponse(channel, participantIds);
     }
 
     @EventListener // 이벤트 구독

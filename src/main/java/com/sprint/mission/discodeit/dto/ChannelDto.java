@@ -1,10 +1,8 @@
 package com.sprint.mission.discodeit.dto;
 
 import com.sprint.mission.discodeit.entity.ChannelType;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -12,17 +10,6 @@ import java.util.Set;
 import java.util.UUID;
 
 public class ChannelDto {
-//    public record CreatePublicRequest(
-//            @NotBlank
-//            String name,
-//            String description
-//
-//    ) {}
-//    public record CreatePrivateRequest(
-//            List<UUID> memberIds
-//
-//    ) {}
-
     public record PublicChannelCreateRequest(
             @NotNull(message = "채널 타입은 필수입니다.")
             String name,
@@ -39,7 +26,7 @@ public class ChannelDto {
             ChannelType type,
             String name,
             String description,
-            List<UUID> memberIds,
+            List<UUID> participantIds,
             Instant lastMessageAt
     ) {}
 
