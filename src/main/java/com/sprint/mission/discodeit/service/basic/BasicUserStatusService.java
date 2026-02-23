@@ -24,7 +24,7 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatusDto.Response create(UserStatusDto.CreateRequest request) {
-        UUID userId = request.userid();
+        UUID userId = request.userId();
 
         if (!userRepository.existsById(userId)) {
             throw new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + userId);

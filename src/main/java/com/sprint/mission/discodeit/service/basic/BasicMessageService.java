@@ -27,7 +27,7 @@ public class BasicMessageService implements MessageService {
 
 
     @Override
-    public MessageDto.Response create(MessageDto.CreateRequest request) {
+    public MessageDto.Response create(MessageDto.CreateRequest request, List<UUID> attachmentIds) {
         Channel channel = channelRepository.findById(request.channelId())
                 .orElseThrow(() -> new NoSuchElementException("해당 채널을 찾을 수 없습니다: " + request.channelId()));
 
@@ -43,7 +43,7 @@ public class BasicMessageService implements MessageService {
 
         // todo: 파일이 실제로 업로드 되었는지 개수는 맞는지 검증 필요
 
-        Message message = new Message(request.content(), request.channelId(), request.authorId(), request.attachmentIds());
+        Message message = new Message(request.content(), request.channelId(), request.authorId(), attachmentIds);
         Message savedMessage = messageRepository.save(message);
 
         channel.updateLastMessageAt(savedMessage.getCreatedAt());

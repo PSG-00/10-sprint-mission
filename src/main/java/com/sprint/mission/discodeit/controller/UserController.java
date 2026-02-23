@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserStatusDto;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import jakarta.validation.Valid;
@@ -26,44 +27,58 @@ public class UserController {
 
     private final UserService userService;
     private final UserStatusService userStatus;
+    private final BinaryContentService binaryContentService;
 
-    @RequestMapping(method = RequestMethod.POST, value = "/signup")
-    public ResponseEntity<UserDto.Response> createUser(@RequestBody @Valid UserDto.CreateRequest request) {
-        UserDto.Response response = userService.create(request);
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserDto.Response> createUser(
+            @RequestPart("userCreateRequest") @Valid UserDto.CreateRequest request,
+            @RequestPart(required = false) MultipartFile file) {
+        UserDto.Response response = userService.create(request, uploadProfile(file));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @RequestMapping(method = RequestMethod.PATCH, value = "/{user-id}")
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserDto.Response> updateUser(
-            @PathVariable("user-id") UUID userId,
-            @RequestBody @Valid UserDto.UpdateRequest request) {
-        UserDto.Response response = userService.update(userId, request);
+            @PathVariable("userId") UUID userId,
+            @RequestPart("userUpdateRequest") @Valid UserDto.UpdateRequest request,
+            @RequestPart (value = "profile", required = false) MultipartFile file) {
+        UserDto.Response response = userService.update(userId, request, uploadProfile(file));
         return ResponseEntity.ok(response);
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{user-id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("user-id") UUID userId) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable("userId") UUID userId) {
         userService.delete(userId);
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/{user-id}")
-    public ResponseEntity<UserDto.Response> findUser(@PathVariable("user-id") UUID userId) {
+    @RequestMapping(method = RequestMethod.GET, value = "/{userId}")
+    public ResponseEntity<UserDto.Response> findUser(@PathVariable("userId") UUID userId) {
         UserDto.Response response = userService.find(userId);
         return ResponseEntity.ok(response);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/findAll")
+    @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<UserDto.Response>> findAllUser() {
         List<UserDto.Response> response = userService.findAll();
         return ResponseEntity.ok(response);
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/{user-id}/status")
-    public ResponseEntity<UserStatusDto.Response> updateUserStatus(
-            @PathVariable("user-id") UUID userId,
-            @RequestBody UserStatusDto.UpdateRequest request) {
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{userId}/userStatus")
+    public ResponseEntity<UserStatusDto.Response> patchUserStatus(
+            @PathVariable("userId") UUID userId,
+            @RequestBody @Valid UserStatusDto.UpdateRequest request) {
         UserStatusDto.Response response = userStatus.updateByUserId(userId, request);
         return ResponseEntity.ok(response);
+    }
+
+    private UUID uploadProfile(MultipartFile file) {
+        if (file == null || file.isEmpty()) return null;
+
+        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
+            throw new IllegalArgumentException("이미지만 업로드 가능합니다.");
+        }
+
+        return binaryContentService.create(binaryContentService.multipartFileToCreateRequest(file)).id();
     }
 }

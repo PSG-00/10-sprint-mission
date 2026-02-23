@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    @Mapping(target = "Online", source = "Online")
-    UserDto.Response toResponse(User user, boolean Online);
+    @Mapping(target = "online", source = "online")
+    UserDto.Response toResponse(User user, boolean online);
 
 }
