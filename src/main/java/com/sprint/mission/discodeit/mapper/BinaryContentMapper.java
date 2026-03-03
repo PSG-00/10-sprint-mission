@@ -1,0 +1,12 @@
+package com.sprint.mission.discodeit.mapper;
+
+import com.sprint.mission.discodeit.dto.BinaryContentDto;
+import com.sprint.mission.discodeit.entity.BinaryContent;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = "spring")
+public interface BinaryContentMapper {
+    @Mapping(source = "bytes", target = "bytes")
+    BinaryContentDto.Response toResponse(BinaryContent binaryContent);
+}
