@@ -1,61 +1,69 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdateEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.UUID;
-
+@Entity
+@NoArgsConstructor
 @Getter
-public class User implements Serializable {
-    private static final long serialVersionUID = 1L;
+@Setter
+@Table(name = "users")
+public class User extends BaseUpdateEntity {
 
-    private UUID id;
-    private Instant createdAt;
-    private Instant updatedAt;
-    //
+    @Column(unique = true, nullable = false)
     private String username;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String password;
     //
-    private UUID profileId;
+    @OneToOne(fetch = FetchType.LAZY, orphanRemoval = true)
+    @JoinColumn(name = "profile_id", columnDefinition="uuid")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private BinaryContent profile;
 
-    public User(String username, String email, String password, UUID profileId) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        //
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private UserStatus status;
+
+    public User(String username, String email, String password, BinaryContent profile) {
         this.username = username;
         this.email = email;
         this.password = password;
-        //
-        this.profileId = profileId;
+        this.profile = profile;
     }
 
-    public void update(String newUsername, String newEmail, String newPassword, UUID newProfileId) {
-        boolean anyValueUpdated = false;
+    public void update(String newUsername, String newEmail, String newPassword, BinaryContent newProfile) {
         if (newUsername != null && !newUsername.equals(this.username)) {
             this.username = newUsername;
-            anyValueUpdated = true;
         }
         if (newEmail != null && !newEmail.equals(this.email)) {
             this.email = newEmail;
-            anyValueUpdated = true;
         }
         if (newPassword != null && !newPassword.equals(this.password)) {
             this.password = newPassword;
-            anyValueUpdated = true;
         }
-        if (newProfileId != null && !newProfileId.equals(this.profileId)) {
-            this.profileId = newProfileId;
-            anyValueUpdated = true;
-        }
-        if (anyValueUpdated) {
-            this.updatedAt = Instant.now();
+        if (newProfile != null && !newProfile.equals(this.profile)) {
+            this.profile = newProfile;
         }
     }
 
-    public void deleteProfile() {
-        this.profileId = null;
-        this.updatedAt = Instant.now();
+    // UserStatusd와 User의 연관관계 편의 메서드
+    public void setStatus(UserStatus status) {
+        if (this.status != null) {
+            this.status.setUser(null);
+        }
+
+        this.status = status;
+
+        if (status != null && status.getUser() != this) {
+            status.setUser(this);
+        }
     }
 }

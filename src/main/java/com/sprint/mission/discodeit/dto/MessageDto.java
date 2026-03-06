@@ -25,8 +25,8 @@ public class MessageDto {
             Instant updatedAt,
             String content,
             UUID channelId,
-            UUID authorId,
-            List<UUID> attachmentIds
+            UserDto.Response author,
+            List<BinaryContentDto.Response> attachments
     ) {}
 
     @Schema(name = "MessageUpdateRequest", description = "수정할 Message 내용")

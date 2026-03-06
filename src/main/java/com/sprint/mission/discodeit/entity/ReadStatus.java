@@ -1,29 +1,44 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdateEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
-import java.io.Serializable;
 import java.time.Instant;
-import java.util.UUID;
 
+@Entity
+@NoArgsConstructor
 @Getter
-public class ReadStatus implements Serializable {
-    private static final long serialVersionUID = 1L;
+@Setter
+@Table(
+        name = "read_statuses",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uq_read_statuses_user_channel",
+                columnNames = {"user_id", "channel_id"}
+        )
+)
+public class ReadStatus extends BaseUpdateEntity {
 
-    private UUID id;
-    private Instant createdAt;
-    private Instant updatedAt;
-    //
-    private UUID userId;
-    private UUID channelId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", columnDefinition = "uuid", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "channel_id", columnDefinition = "uuid", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Channel channel;
+
+    @Column(name = "last_read_at", nullable = false)
     private Instant lastReadAt;
 
-    public ReadStatus(UUID userId, UUID channelId, Instant lastReadAt) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-        this.userId = userId;
-        this.channelId = channelId;
+    public ReadStatus(User user, Channel channel, Instant lastReadAt) {
+        this.user = user;
+        this.channel = channel;
         //this.lastReadAt = Instant.EPOCH; // 1970년, 유저 생성 이전에 생성된 메시지 안읽음 처리
         this.lastReadAt = lastReadAt;
     }
@@ -31,7 +46,6 @@ public class ReadStatus implements Serializable {
     public void update(Instant newLastReadAt) {
         if (newLastReadAt != null && !newLastReadAt.equals(this.lastReadAt)) {
             this.lastReadAt = newLastReadAt;
-            this.updatedAt = Instant.now();
         }
     }
 

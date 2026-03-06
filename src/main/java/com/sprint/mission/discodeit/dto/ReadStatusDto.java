@@ -19,8 +19,6 @@ public class ReadStatusDto {
     @Schema(name = "ReadStatusResponse", description = "Message 읽음 상태 상세 정보")
     public record Response(
             UUID id,
-            Instant createdAt,
-            Instant updatedAt,
             UUID userId,
             UUID channelId,
             Instant lastReadAt

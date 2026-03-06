@@ -1,55 +1,54 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.ChannelDto;
+import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.*;
-import com.sprint.mission.discodeit.event.ChannelDeletedEvent;
-import com.sprint.mission.discodeit.event.ChannelNoMemberEvent;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
+import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.context.event.EventListener;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BasicChannelService implements ChannelService {
     private final ChannelRepository channelRepository;
-    //
     private final UserRepository userRepository;
     private final ReadStatusRepository readStatusRepository;
-    private final MessageRepository messageRepository;
-    //
     private final ChannelMapper channelMapper;
-    //
-    private final ApplicationEventPublisher eventPublisher;
+    private final UserMapper userMapper;
 
+    @Transactional
     public ChannelDto.Response create(ChannelDto.PublicChannelCreateRequest request) {
         Channel channel = new Channel(ChannelType.PUBLIC, request.name(), request.description());
         return toDto(channelRepository.save(channel));
     }
 
+    @Transactional
     public ChannelDto.Response create(ChannelDto.PrivateChannelCreateRequest request) {
-        request.participantIds().forEach(userId -> // 멤버가 실제로 존재하는 유저인지 확인
-                userRepository.findById(userId)
-                            .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다." + userId)));
+        List<User> participants = request.participantIds().stream()
+                .map(userId -> userRepository.findById(userId)
+                        .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + userId)))
+                .toList();
 
         Channel channel = new Channel(ChannelType.PRIVATE, null, null);
-        Channel createChannel = channelRepository.save(channel);
+        Channel savedChannel = channelRepository.save(channel);
 
-        request.participantIds().stream()
-                .map(userId -> new ReadStatus(userId, createChannel.getId(), createChannel.getCreatedAt()))
+        participants.stream()
+                .map(user -> new ReadStatus(user, savedChannel, savedChannel.getCreatedAt()))
                 .forEach(readStatusRepository::save);
 
-        return toDto(createChannel);
+        return toDto(savedChannel);
     }
 
     @Override
@@ -68,7 +67,7 @@ public class BasicChannelService implements ChannelService {
         // 유저가 가입한 private 채널 목록
         Set<UUID> userJoinedPrivateChannelIds =
                 readStatusRepository.findAllByUserId(userId).stream()
-                .map(ReadStatus::getChannelId)
+                .map(rs -> rs.getChannel().getId())
                 .collect(Collectors.toSet());
 
         // 모든 채널에서
@@ -89,6 +88,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     @Override
+    @Transactional
     public ChannelDto.Response update(UUID channelId, ChannelDto.UpdatePublicRequest request) {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new NoSuchElementException("해당 채널은 찾을 수 없습니다: " + channelId));
@@ -96,43 +96,31 @@ public class BasicChannelService implements ChannelService {
         if (channel.getType() == ChannelType.PRIVATE) {
             throw new IllegalArgumentException("비공개 채널은 수정할 수 없습니다:" + channelId);
         }
-
         channel.update(request.newName(), request.newDescription());
-
-        return toDto(channelRepository.save(channel));
+        return toDto(channel);
     }
 
     @Override
+    @Transactional
     public void delete(UUID channelId) {
-        if (!channelRepository.existsById(channelId)) {
-            throw new NoSuchElementException("해당 채널을 찾을 수 없습니다:" + channelId);
-        }
-
-        eventPublisher.publishEvent(new ChannelDeletedEvent(channelId));
-        readStatusRepository.deleteByChannelId(channelId);
-        channelRepository.deleteById(channelId);
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() ->new NoSuchElementException("해당 채널을 찾을 수 없습니다" + channelId));
+        channelRepository.delete(channel);
     }
 
     // Helper
     private ChannelDto.Response toDto(Channel channel) {
-        List<UUID> participantIds = new ArrayList<>();
-
-        if (channel.getType() == ChannelType.PRIVATE) { // private 채널일 경우
-            participantIds = readStatusRepository.findAllByChannelId(channel.getId()) // 채널 id에 맞는 readStatus 전부 가져옴
+        List<UserDto.Response> participants = new ArrayList<>();
+        if (channel.getType().equals(ChannelType.PRIVATE)) {
+            participants = readStatusRepository.findAllByChannelId(channel.getId())
                     .stream()
-                    .map(ReadStatus::getUserId) // 채널 id를 가지고 있는 readStatus의 유저 id를 전부 가져옴, 즉 비공개 채널의 멤버 가져옴
+                    .map(ReadStatus::getUser)
+                    .map(user -> userMapper.toResponse(user, user.getStatus().isOnline()))
                     .toList();
-        } else {
-            participantIds = List.of();
         }
 
-        return channelMapper.toResponse(channel, participantIds);
-    }
+        return channelMapper.toResponse(channel, participants);
 
-    @EventListener // 이벤트 구독
-    @Transactional
-    public void handleChannelNoMemberEvent(ChannelNoMemberEvent event) {
-        this.delete(event.channelId());
     }
 
 }

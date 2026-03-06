@@ -1,17 +1,17 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.UserDto;
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.event.ChannelNoMemberEvent;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,31 +20,32 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BasicUserService implements UserService {
     private final UserRepository userRepository;
-    //
     private final BinaryContentRepository binaryContentRepository;
     private final UserStatusRepository userStatusRepository;
     private final ReadStatusRepository readStatusRepository;
-    //
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    //
-    private final ApplicationEventPublisher eventPublisher;
+    private final ChannelRepository channelRepository;
 
     @Override
+    @Transactional
     public UserDto.Response create(UserDto.CreateRequest request, UUID profileId) {
         String username = request.username();
         String email = request.email();
         validateUser(null, username, email);
         String password = passwordEncoder.encode(request.password());
 
-        User user = new User(username, email, password, profileId);
-        User createdUser = userRepository.save(user);
+        BinaryContent profile = (profileId == null) ? null :
+                binaryContentRepository.findById(profileId).orElse(null);
 
-        UserStatus userStatus = new UserStatus(createdUser.getId(), Instant.now());
-        userStatusRepository.save(userStatus);
-        return toDto(createdUser);
+        User user = new User(username, email, password, profile);
+
+        user.setStatus(new UserStatus(user, Instant.now()));
+
+        return toDto(userRepository.save(user));
     }
 
     @Override
@@ -62,8 +63,9 @@ public class BasicUserService implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto.Response update(UUID userId, UserDto.UpdateRequest request, UUID newProfileId) {
-        User user=  userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + userId));
 
         validateUser(user, request.newUsername(), request.newEmail());
@@ -72,28 +74,28 @@ public class BasicUserService implements UserService {
                 ? passwordEncoder.encode(request.newPassword())
                 : null;
 
-        // password 업데이트는 엔티티 내 메서드를 따로 만들어서 책임 분리로 개선할 여지가 있음
-        user.update(request.newUsername(), request.newEmail(), encodedPassword, newProfileId);
-        User updatedUser = userRepository.save(user);
+        BinaryContent newProfile = (newProfileId == null) ? null :
+                binaryContentRepository.findById(newProfileId).orElse(null);
 
-        return toDto(updatedUser);
+        // password 업데이트는 엔티티 내 메서드를 따로 만들어서 책임 분리로 개선할 여지가 있음
+        user.update(request.newUsername(), request.newEmail(), encodedPassword, newProfile);
+
+        return toDto(user);
     }
 
-    // 트랜잭션은 aggregate 단위로만 묶는다.
-    // 현재 user는 userStatus없이 생존할 수 있으므로 트랜잭션이 부적절할 수 있다.
-    // @Transactional
     @Override
+    @Transactional
     public void delete(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + userId));
 
-        deleteMemberInPrivate(userId);
+        List<UUID> myChannelIds = readStatusRepository.findChannelIdsByUserId(userId);
 
-        if (user.getProfileId() != null) {
-            binaryContentRepository.deleteById(user.getProfileId());
+        userRepository.delete(user);
+
+        if (!myChannelIds.isEmpty()) {
+            channelRepository.deleteEmptyOrLonelyChannels(myChannelIds);
         }
-        userStatusRepository.deleteByUserId(userId);
-        userRepository.deleteById(userId);
     }
 
     // validation
@@ -122,23 +124,5 @@ public class BasicUserService implements UserService {
                 .orElseThrow(() -> new NoSuchElementException("유저의 상태가 없습니다:" + user.getId()));
 
         return userMapper.toResponse(user, userStatus.isOnline());
-    }
-
-    // 요구사항 외 구현
-    // 비공개 채널의 멤버가 삭제될 때
-    private void deleteMemberInPrivate(UUID userId) {
-        List<ReadStatus> userReadStatuses = readStatusRepository.findAllByUserId(userId);
-
-        for (ReadStatus rs : userReadStatuses) {
-            UUID channelId = rs.getChannelId();
-
-            List<ReadStatus> channelMembers = readStatusRepository.findAllByChannelId(channelId);
-
-            if (channelMembers.size() <= 1) { // 채널에 자신만 존재
-                eventPublisher.publishEvent(new ChannelNoMemberEvent(channelId));
-            } else {
-                readStatusRepository.deleteById(rs.getId());
-            }
-        }
     }
 }
