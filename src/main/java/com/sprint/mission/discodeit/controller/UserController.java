@@ -82,6 +82,7 @@ public class UserController implements UserApi {
             throw new IllegalArgumentException("이미지만 업로드 가능합니다.");
         }
 
-        return binaryContentService.create(binaryContentService.multipartFileToCreateRequest(file)).id();
+        return binaryContentService.create(binaryContentService.multipartFileToCreateRequest(file))
+                .id();
     }
 }

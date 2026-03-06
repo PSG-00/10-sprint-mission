@@ -1,39 +1,42 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.MessageDto;
+import com.sprint.mission.discodeit.dto.PageResponse;
 import com.sprint.mission.discodeit.entity.*;
-import com.sprint.mission.discodeit.event.ChannelDeletedEvent;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
+import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.MessageService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BasicMessageService implements MessageService {
     private final MessageRepository messageRepository;
-    //
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
     private final BinaryContentRepository binaryContentRepository;
     private final ReadStatusRepository readStatusRepository;
-    //
     private final MessageMapper messageMapper;
+    private final PageResponseMapper pageResponseMapper;
 
 
     @Override
+    @Transactional
     public MessageDto.Response create(MessageDto.CreateRequest request, List<UUID> attachmentIds) {
         Channel channel = channelRepository.findById(request.channelId())
                 .orElseThrow(() -> new NoSuchElementException("해당 채널을 찾을 수 없습니다: " + request.channelId()));
 
-        if (!userRepository.existsById(request.authorId())) {
-            throw new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + request.authorId());
-        }
+        User author = userRepository.findById(request.authorId())
+                .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다." + request.authorId()));
 
         if (channel.getType() == ChannelType.PRIVATE) {
             if (!readStatusRepository.existsByUserIdAndChannelId(request.authorId(), channel.getId())){
@@ -43,11 +46,12 @@ public class BasicMessageService implements MessageService {
 
         // todo: 파일이 실제로 업로드 되었는지 개수는 맞는지 검증 필요
 
-        Message message = new Message(request.content(), request.channelId(), request.authorId(), attachmentIds);
+        List<BinaryContent> attachments = binaryContentRepository.findAllById(attachmentIds);
+        Message message = new Message(request.content(), channel, author, attachments);
         Message savedMessage = messageRepository.save(message);
 
-        channel.updateLastMessageAt(savedMessage.getCreatedAt());
-        channelRepository.save(channel);
+        Instant lastMessageAt = savedMessage.getCreatedAt() == null ? Instant.now() : savedMessage.getCreatedAt();
+        channel.updateLastMessageAt(lastMessageAt);
 
         return messageMapper.toResponse(savedMessage);
     }
@@ -60,40 +64,43 @@ public class BasicMessageService implements MessageService {
     }
 
     @Override
-    public List<MessageDto.Response> findAllByChannelId(UUID channelId) {
+    public PageResponse<MessageDto.Response> findAllByChannelId(UUID channelId, Pageable pageable) {
+
         if(!channelRepository.existsById(channelId)) {
-            throw new NoSuchElementException("해당 채널을 찾을 수 없습니다: "  + channelId);
+            throw new NoSuchElementException("해당 채널을 찾을 수 없습니다: " + channelId);
         }
-        return messageRepository.findAllByChannelId(channelId).stream()
-                .map(messageMapper::toResponse)
-                .toList();
+
+        Slice<Message> messageSlice = messageRepository.findAllByChannelId(channelId, pageable);
+
+        // messageSlice의 content인 message를 MessageDto.Response로 변환
+        Slice<MessageDto.Response> responseSlice = messageSlice.map(messageMapper::toResponse);
+
+        // messageSlice를 DTO로 변환
+        return pageResponseMapper.fromSlice(responseSlice);
+
+//        Page<Message> messagePage = messageRepository.findAllByChannelId(channelId, pageable);
+//
+//        Page<MessageDto.Response> responsePage = messagePage.map(messageMapper::toResponse);
+//
+//        return pageResponseMapper.fromPage(responsePage);
     }
 
     @Override
+    @Transactional
     public MessageDto.Response update(UUID messageId, MessageDto.UpdateRequest request) {
         String newContent = request.newContent();
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new NoSuchElementException("해당 메시지를 찾을 수 없습니다: " + messageId));
         message.update(newContent);
 
-        return messageMapper.toResponse(messageRepository.save(message));
+        return messageMapper.toResponse(message);
     }
 
     @Override
+    @Transactional
     public void delete(UUID messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new NoSuchElementException("해당 메시지를 찾을 수 없습니다: " + messageId));
-
-        message.getAttachmentIds()
-                .forEach(binaryContentRepository::deleteById);
-
-        messageRepository.deleteById(messageId);
-    }
-
-    @EventListener
-    @Transactional
-    public void handleChannelDeletedEvent(ChannelDeletedEvent event) {
-        List<Message> messages = messageRepository.findAllByChannelId(event.channelId());
-        messages.forEach((message) -> {this.delete(message.getId());});
+        messageRepository.delete(message);
     }
 }

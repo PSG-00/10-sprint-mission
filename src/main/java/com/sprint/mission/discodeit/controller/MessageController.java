@@ -2,10 +2,13 @@ package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.controller.api.MessageApi;
 import com.sprint.mission.discodeit.dto.MessageDto;
+import com.sprint.mission.discodeit.dto.PageResponse;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -58,9 +61,12 @@ public class MessageController implements MessageApi {
 
     @Override
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<MessageDto.Response>> findAllByChannel(@RequestParam("channelId") UUID channelId) {
-        List<MessageDto.Response> response = messageService.findAllByChannelId(channelId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<PageResponse<MessageDto.Response>> findAllByChannelId(
+            @RequestParam("channelId") UUID channelId,
+            @ParameterObject Pageable pageable) {
+        PageResponse<MessageDto.Response> responsePage = messageService.findAllByChannelId(channelId, pageable);
+        return ResponseEntity.ok(responsePage);
+
     }
 
     public List<UUID> uploadMessageFiles(List<MultipartFile> files) {

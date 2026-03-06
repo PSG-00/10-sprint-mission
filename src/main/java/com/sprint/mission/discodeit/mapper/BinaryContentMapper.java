@@ -7,6 +7,5 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface BinaryContentMapper {
-    @Mapping(source = "bytes", target = "bytes")
     BinaryContentDto.Response toResponse(BinaryContent binaryContent);
 }

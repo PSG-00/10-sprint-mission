@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.controller.api.BinaryContentApi;
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,25 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BinaryContentController implements BinaryContentApi {
     private final BinaryContentService binaryContentService;
-
-//    @Override
-//    @RequestMapping(method = RequestMethod.POST, value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<UUID> uploadProfileFile(@RequestPart MultipartFile file) {
-//        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
-//            throw new IllegalArgumentException("이미지만 업로드 가능합니다.");
-//        }
-//        BinaryContentDto.Response response = binaryContentService.create(multipartFileToCreateRequest(file));
-//        return ResponseEntity.status(HttpStatus.CREATED).body(response.id());
-//    }
-//
-//    @Override
-//    @RequestMapping(method = RequestMethod.POST, value = "/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<List<UUID>> uploadMessageFiles(@RequestPart("files") List<MultipartFile> files) {
-//        List<UUID> ids = files.stream()
-//                .map(file -> binaryContentService.create(multipartFileToCreateRequest(file)).id())
-//                .toList();
-//        return ResponseEntity.status(HttpStatus.CREATED).body(ids);
-//    }
+    private final BinaryContentStorage binaryContentStorage;
 
     @Override
     @RequestMapping(method = RequestMethod.GET, value = "/{binaryContentId}")
@@ -54,15 +37,10 @@ public class BinaryContentController implements BinaryContentApi {
         return ResponseEntity.ok(response);
     }
 
-//    private BinaryContentDto.CreateRequest multipartFileToCreateRequest(MultipartFile file) {
-//        try {
-//            return new BinaryContentDto.CreateRequest(
-//                    file.getOriginalFilename(),
-//                    file.getContentType(),
-//                    file.getBytes()
-//            );
-//        } catch (IOException e) {
-//            throw new UncheckedIOException("파일 읽기 오류", e);
-//        }
-//    }
+    @RequestMapping(method = RequestMethod.GET, value = "/{binaryContentId}/download")
+    public ResponseEntity<?> download(@PathVariable("binaryContentId") UUID binaryContentId) {
+        BinaryContentDto.Response response = binaryContentService.find(binaryContentId);
+        return binaryContentStorage.download(response);
+    }
+
 }

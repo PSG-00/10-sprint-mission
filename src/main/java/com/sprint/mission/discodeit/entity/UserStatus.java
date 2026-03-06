@@ -1,37 +1,39 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdateEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.UUID;
 
-@Getter
+@Entity
 @NoArgsConstructor
-public class UserStatus implements Serializable {
-    private static final long serialVersionUID = 1L;
+@Getter
+@Setter
+@Table(name = "user_statuses")
+public class UserStatus extends BaseUpdateEntity {
 
-    private UUID id;
-    private Instant createdAt;
-    private Instant updatedAt;
-    //
-    private UUID userId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", columnDefinition = "uuid", unique = true, nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User user;
+
+    @Column(name = "last_active_at", nullable = false)
     private Instant lastActiveAt;
 
-    public UserStatus(UUID userId, Instant lastActiveAt) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-        this.userId = userId;
+    public UserStatus(User user, Instant lastActiveAt) {
+        this.user = user;
         this.lastActiveAt = lastActiveAt;
     }
 
     public void update(Instant newLastActiveAt) {
         if (newLastActiveAt != null && !newLastActiveAt.equals(this.lastActiveAt)) {
             this.lastActiveAt = newLastActiveAt;
-            this.updatedAt = Instant.now();
         }
     }
 
