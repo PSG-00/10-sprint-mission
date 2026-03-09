@@ -64,18 +64,8 @@ public class BasicChannelService implements ChannelService {
             throw new NoSuchElementException("해당 유저를 찾을 수 없습니다." + userId);
         }
 
-        // 유저가 가입한 private 채널 목록
-        Set<UUID> userJoinedPrivateChannelIds =
-                readStatusRepository.findAllByUserId(userId).stream()
-                .map(rs -> rs.getChannel().getId())
-                .collect(Collectors.toSet());
-
-        // 모든 채널에서
-        return channelRepository.findAll().stream()
-                .filter(channel -> // 아래의 조건이 참이면 가져옴
-                        channel.getType() == ChannelType.PUBLIC // 채널이 public이거나
-                                || userJoinedPrivateChannelIds.contains(channel.getId()) // 유저가 가입한 private 채널이거나
-                )
+        return channelRepository.findAllAccessibleByUserId(userId)
+                .stream()
                 .map(this::toDto)
                 .toList();
     }
