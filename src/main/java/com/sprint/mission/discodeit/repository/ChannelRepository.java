@@ -12,14 +12,18 @@ import java.util.UUID;
 
 public interface ChannelRepository extends JpaRepository<Channel, UUID> {
     @Modifying(clearAutomatically = true)
-    @Query("DELETE FROM Channel c " +
-            "WHERE c.id IN :channelIds " +
-            "AND c.type = 'PRIVATE' " +
-            "AND (SELECT COUNT(rs) FROM ReadStatus rs WHERE rs.channel = c) <= 1")
+    @Query("""
+    DELETE FROM Channel c
+    WHERE c.id IN :channelIds
+    AND c.type = 'PRIVATE'
+    AND (SELECT COUNT(rs) FROM ReadStatus rs WHERE rs.channel = c) <= 1
+    """)
     void deleteEmptyOrLonelyChannels(@Param("channelIds") List<UUID> channelIds);
 
-    @Query("SELECT DISTINCT c FROM Channel c " +
-            "LEFT JOIN ReadStatus rs ON rs.channel = c " + // c.readStatuses 대신 클래스를 직접 지정
-            "WHERE c.type = 'PUBLIC' OR rs.user.id = :userId")
+    @Query("""
+    SELECT DISTINCT c FROM Channel c
+    LEFT JOIN ReadStatus rs ON rs.channel = c
+    WHERE c.type = 'PUBLIC' OR rs.user.id = :userId
+    """)
     List<Channel> findAllAccessibleByUserId(@Param("userId") UUID userId);
 }

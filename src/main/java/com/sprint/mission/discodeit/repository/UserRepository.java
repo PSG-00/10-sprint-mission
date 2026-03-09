@@ -15,9 +15,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @EntityGraph(attributePaths = {"status", "profile"})
     Optional<User> findByUsername(String username);
 
-    @Query("SELECT u FROM User u " +
-            "LEFT JOIN FETCH u.status " +
-            "WHERE u.username = :username")
+    @Query("""
+    SELECT u FROM User u
+    LEFT JOIN FETCH u.status
+    WHERE u.username = :username
+    """)
     Optional<User> findByUsernameWithDetails(@Param("username") String username);
 
     boolean existsByUsername(String username);
