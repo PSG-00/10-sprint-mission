@@ -64,17 +64,12 @@ public class BasicChannelService implements ChannelService {
             throw new NoSuchElementException("해당 유저를 찾을 수 없습니다." + userId);
         }
 
-        return channelRepository.findAllAccessibleByUserId(userId)
-                .stream()
-                .map(this::toDto)
-                .toList();
+        return toDtos(channelRepository.findAllAccessibleByUserId(userId));
     }
 
     @Override
     public List<ChannelDto.Response> findAll() {
-        return channelRepository.findAll().stream()
-                .map(this::toDto)
-                .toList();
+        return toDtos(channelRepository.findAll());
     }
 
     @Override
@@ -110,7 +105,31 @@ public class BasicChannelService implements ChannelService {
         }
 
         return channelMapper.toResponse(channel, participants);
+    }
+    private List<ChannelDto.Response> toDtos(List<Channel> channels) {
+        List<UUID> channelIds = channels.stream()
+                .map(Channel::getId)
+                .toList();
 
+        List<ReadStatus> readStatuses = readStatusRepository.findAllByChannelIdsWithUser(channelIds);
+
+        Map<UUID, List<UserDto.Response>> participantsMap = readStatuses.stream()
+                .collect(Collectors.groupingBy(
+                        rs -> rs.getChannel().getId(),
+                        Collectors.mapping(
+                                rs -> userMapper.toResponse(rs.getUser(), rs.getUser().getStatus().isOnline()),
+                                Collectors.toList()
+                        )
+                ));
+
+        return channels.stream()
+                .map(channel -> channelMapper.toResponse(
+                        channel,
+                        (channel.getType() == ChannelType.PRIVATE)
+                                ? participantsMap.getOrDefault(channel.getId(), List.of())
+                                : List.of()
+                ))
+                .toList();
     }
 
 }
