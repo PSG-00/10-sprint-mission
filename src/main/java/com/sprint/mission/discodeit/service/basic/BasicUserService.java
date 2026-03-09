@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -45,7 +47,11 @@ public class BasicUserService implements UserService {
 
         user.setStatus(new UserStatus(user, Instant.now()));
 
-        return toDto(userRepository.save(user));
+        try { // 레이스컨디션으로 발생할 수 있는 DB 예외를 서비스에서 처리
+            return toDto(userRepository.saveAndFlush(user));
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("서버 측 오류");
+        }
     }
 
     @Override
@@ -80,7 +86,13 @@ public class BasicUserService implements UserService {
         // password 업데이트는 엔티티 내 메서드를 따로 만들어서 책임 분리로 개선할 여지가 있음
         user.update(request.newUsername(), request.newEmail(), encodedPassword, newProfile);
 
-        return toDto(user);
+        try {
+            return toDto(userRepository.saveAndFlush(user));
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("서버 측 오류");
+        }
+
+
     }
 
     @Override
@@ -117,11 +129,8 @@ public class BasicUserService implements UserService {
 
     // Helper
     public UserDto.Response toDto(User user) {
-        // 현재는 요구사항에서 find, findAll이 유저 상태 정보를 같이 포함하라고 해서 강하게 결합했음
-        // 유저 상태 정보가 손실되어도 유저는 정상적으로 작동해야 하므로 실제로는 예외 처리를 하면 안됨
-        // 트랜잭션으로 정합성을 보장하거나, 손실되면 offline으로 유연하게 처리하도록 바꿔야 할 필요성 존재
-        UserStatus userStatus = userStatusRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new NoSuchElementException("유저의 상태가 없습니다:" + user.getId()));
+        UserStatus userStatus = Optional.ofNullable(user.getStatus())
+                .orElseThrow(() -> new IllegalStateException("무결성 오류! 해당 유저의 상태를 찾을 수 없음!" + user.getId()));
 
         return userMapper.toResponse(user, userStatus.isOnline());
     }

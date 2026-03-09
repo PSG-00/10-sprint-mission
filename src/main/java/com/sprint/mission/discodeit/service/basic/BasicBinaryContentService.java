@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class BasicBinaryContentService implements BinaryContentService {
     private final BinaryContentRepository binaryContentRepository;
     private final BinaryContentStorage binaryContentStorage;
@@ -63,7 +65,14 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     @Override
     public List<BinaryContentDto.Response> findAllByIn(List<UUID> binaryContentIds) {
-        return binaryContentRepository.findAllByIdIn(binaryContentIds).stream()
+        List<BinaryContent> binaryContents = binaryContentRepository.findAllByIdIn(binaryContentIds);
+
+        if (binaryContents.size() != binaryContentIds.size()) {
+            log.warn("첨부파일 유실됨");
+            throw new NoSuchElementException("일부 첨부파일 데이터가 유실되었습니다. 확인이 필요합니다!");
+        }
+
+        return binaryContents.stream()
                 .map(binaryContentMapper::toResponse)
                 .toList();
     }

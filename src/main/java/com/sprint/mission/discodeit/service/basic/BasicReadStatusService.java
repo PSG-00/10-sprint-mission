@@ -10,6 +10,7 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +45,13 @@ public class BasicReadStatusService implements ReadStatusService {
 
         ReadStatus readStatus = new ReadStatus(user, channel, lastReadAt);
 
-        return readStatusMapper.toResponse(readStatusRepository.save(readStatus));
+        try { // 레이스 컨디션 발생에 따른 ReadStatus 중복 저장에 의해 발생하는 DB 예외를 성공으로 변환
+            return readStatusMapper.toResponse(readStatusRepository.saveAndFlush(readStatus));
+        } catch (DataIntegrityViolationException e) {
+            ReadStatus existingStatus = readStatusRepository.findByUserIdAndChannelId(user.getId(), channel.getId())
+                    .orElseThrow(() -> new IllegalStateException("서버 측 오류"));
+            return readStatusMapper.toResponse(existingStatus);
+        }
     }
 
     @Override
