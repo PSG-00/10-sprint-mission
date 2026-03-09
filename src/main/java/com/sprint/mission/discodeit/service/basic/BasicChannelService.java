@@ -6,12 +6,10 @@ import com.sprint.mission.discodeit.entity.*;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
-import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,10 +34,24 @@ public class BasicChannelService implements ChannelService {
 
     @Transactional
     public ChannelDto.Response create(ChannelDto.PrivateChannelCreateRequest request) {
-        List<User> participants = request.participantIds().stream()
-                .map(userId -> userRepository.findById(userId)
-                        .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + userId)))
-                .toList();
+        List<User> participants = userRepository.findAllById(request.participantIds());
+
+        Set<UUID> foundIds = participants.stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
+
+        Set<UUID> missingIds = request.participantIds().stream()
+                .filter(id -> !foundIds.contains(id))
+                .collect(Collectors.toSet());
+
+        if (!missingIds.isEmpty()) {
+            throw new NoSuchElementException("존재하지 않는 유저 ID가 포함되어 있습니다: " + missingIds);
+        }
+
+        if (participants.size() < 2) {
+            throw new IllegalArgumentException("비공개 채널은 서로 다른 유저 최소 2명이 참여해야 합니다. (현재 유효 참여자 수: " + participants.size() + "명)");
+        }
+
 
         Channel channel = new Channel(ChannelType.PRIVATE, null, null);
         Channel savedChannel = channelRepository.save(channel);
@@ -107,6 +119,8 @@ public class BasicChannelService implements ChannelService {
         return channelMapper.toResponse(channel, participants);
     }
     private List<ChannelDto.Response> toDtos(List<Channel> channels) {
+        if (channels.isEmpty()) return List.of(); // 채널 하나도 없을 때 early 리턴으로 DB 접속 아끼기
+
         List<UUID> channelIds = channels.stream()
                 .map(Channel::getId)
                 .toList();

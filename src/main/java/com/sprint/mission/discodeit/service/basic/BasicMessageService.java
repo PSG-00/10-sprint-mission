@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,8 +44,6 @@ public class BasicMessageService implements MessageService {
                 throw new IllegalArgumentException("비공개 채널에는 채널 멤버만 메시지를 전송할 수 있습니다.");
             }
         }
-
-        // todo: 파일이 실제로 업로드 되었는지 개수는 맞는지 검증 필요
 
         List<BinaryContent> attachments = binaryContentRepository.findAllById(attachmentIds);
         Message message = new Message(request.content(), channel, author, attachments);

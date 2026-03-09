@@ -8,9 +8,11 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -30,15 +32,24 @@ public class BasicUserStatusService implements UserStatusService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("해당 유저를 찾을 수 없습니다:" + userId));
+
         if (userStatusRepository.existsByUserId(userId)) {
             throw new IllegalArgumentException("이미 해당 유저의 UserStatus가 있습니다.");
         }
 
-        UserStatus userStatus = new UserStatus(user, request.lastActiveAt());
+        UserStatus userStatus = new UserStatus(user, request.lastActiveAt() != null
+                ? request.lastActiveAt()
+                : Instant.now());
 
         user.setStatus(userStatus);
 
-        return userStatusMapper.toResponse(userStatusRepository.save(userStatus));
+        try{
+            return userStatusMapper.toResponse(userStatusRepository.saveAndFlush(userStatus));
+        } catch (DataIntegrityViolationException e) {
+            UserStatus existingUserStatus = userStatusRepository.findByUserId(userId)
+                    .orElseThrow(() -> new IllegalStateException("서버 측 오류"));
+            return userStatusMapper.toResponse(existingUserStatus);
+        }
     }
 
     @Override
