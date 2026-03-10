@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,9 +41,13 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     """)
     Slice<Message> findAllUseCursorByChannelId(@Param("channelId")UUID channelId, @Param("cursor") Instant Cursor, Pageable pageable);
 
-
-
-
+    @Query("""
+    select m.id, a
+    from Message m
+    left join m.attachments a
+    where m.id in :messageIds
+    """)
+    List<Object[]> findAttachmentsByMessageIds(@Param("messageIds") List<UUID> messageIds);
 
     void deleteByChannelId(UUID channelId);
 }

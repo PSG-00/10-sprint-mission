@@ -23,7 +23,7 @@ public class Channel extends BaseUpdateEntity {
     @Column(name = "description")
     private String description;
     //
-    @Column(name = "last_message_at")
+    @Column(name = "last_message_at") // 채널의 마지막 메시지 비정규화
     private Instant lastMessageAt;
 
     public Channel(ChannelType type, String name, String description) {
