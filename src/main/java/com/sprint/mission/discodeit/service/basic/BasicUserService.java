@@ -131,6 +131,6 @@ public class BasicUserService implements UserService {
         UserStatus userStatus = Optional.ofNullable(user.getStatus())
                 .orElseThrow(() -> new IllegalStateException("무결성 오류! 해당 유저의 상태를 찾을 수 없음!" + user.getId()));
 
-        return userMapper.toResponse(user, userStatus.isOnline());
+        return userMapper.toResponse(user);
     }
 }
