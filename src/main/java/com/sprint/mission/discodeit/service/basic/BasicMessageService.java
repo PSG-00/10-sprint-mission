@@ -142,6 +142,16 @@ public class BasicMessageService implements MessageService {
     public void delete(UUID messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new NoSuchElementException("해당 메시지를 찾을 수 없습니다: " + messageId));
+
+        Channel channel = message.getChannel();
+
         messageRepository.delete(message);
+        messageRepository.flush();
+
+        Instant latestMessageAt = messageRepository.findFirstByChannelIdOrderByCreatedAtDesc(channel.getId())
+                .map(Message::getCreatedAt)
+                .orElse(null);
+
+        channel.updateLastMessageAt(latestMessageAt);
     }
 }
