@@ -49,5 +49,7 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     """)
     List<Object[]> findAttachmentsByMessageIds(@Param("messageIds") List<UUID> messageIds);
 
+    Optional<Message> findFirstByChannelIdOrderByCreatedAtDesc(UUID channelId);
+
     void deleteByChannelId(UUID channelId);
 }
