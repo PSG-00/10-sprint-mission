@@ -112,7 +112,7 @@ public class BasicChannelService implements ChannelService {
             participants = readStatusRepository.findAllByChannelId(channel.getId())
                     .stream()
                     .map(ReadStatus::getUser)
-                    .map(user -> userMapper.toResponse(user, user.getStatus().isOnline()))
+                    .map(userMapper::toResponse)
                     .toList();
         }
 
@@ -131,7 +131,7 @@ public class BasicChannelService implements ChannelService {
                 .collect(Collectors.groupingBy(
                         rs -> rs.getChannel().getId(),
                         Collectors.mapping(
-                                rs -> userMapper.toResponse(rs.getUser(), rs.getUser().getStatus().isOnline()),
+                                rs -> userMapper.toResponse(rs.getUser()),
                                 Collectors.toList()
                         )
                 ));
