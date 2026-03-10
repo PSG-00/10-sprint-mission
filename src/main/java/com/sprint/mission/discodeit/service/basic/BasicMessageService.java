@@ -8,10 +8,7 @@ import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -85,7 +83,35 @@ public class BasicMessageService implements MessageService {
             messageSlice = messageRepository.findAllUseCursorByChannelId(channelId, cursor, cursorPageable);
         }
 
-        // messageSlice의 content인 message를 MessageDto.Response로 변환
+
+         /* 아래 주석은 Hibernate의 Batch_fetch를 직접 구현한 내용임 */
+//        List<Message> messages = messageSlice.getContent();
+//
+//        List<UUID> messageIds = messages.stream()
+//                .map(Message::getId)
+//                .toList();
+//
+//        Map<UUID, List<BinaryContent>> attachmentsMap =
+//                messageRepository.findAttachmentsByMessageIds(messageIds).stream()
+//                        .filter(row -> row[1] != null)
+//                        .collect(Collectors.groupingBy(
+//                                row -> (UUID) row[0],
+//                                Collectors.mapping(
+//                                        row -> (BinaryContent) row[1],
+//                                        Collectors.toList()
+//                                )
+//                        ));
+//
+//        List<MessageDto.Response> content = messages.stream()
+//                .map(message -> messageMapper.toResponse(
+//                        message,
+//                        attachmentsMap.getOrDefault(message.getId(), List.of())
+//                ))
+//                .toList();
+//
+//        Slice<MessageDto.Response> responseSlice =
+//                new SliceImpl<>(content, messageSlice.getPageable(), messageSlice.hasNext());
+
         Slice<MessageDto.Response> responseSlice = messageSlice.map(messageMapper::toResponse);
 
         String nextCursor = null;

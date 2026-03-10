@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -37,6 +38,7 @@ public class Message extends BaseUpdateEntity {
             joinColumns = @JoinColumn(name = "message_id", columnDefinition = "uuid", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "attachment_id", columnDefinition = "uuid", nullable = false)
     )
+    @BatchSize(size = 50)
     private List<BinaryContent> attachments = new ArrayList<>();
 
     public Message(String content, Channel channel, User author, List<BinaryContent> attachments) {
