@@ -8,6 +8,7 @@ import java.util.UUID;
 public interface UserStatusService {
     UserStatusDto.Response create(UserStatusDto.CreateRequest request);
     UserStatusDto.Response find(UUID userStatusId);
+    UserStatusDto.Response findByUserId(UUID userId);
     List<UserStatusDto.Response> findAll();
     UserStatusDto.Response update(UUID userStatusId, UserStatusDto.UpdateRequest request);
     UserStatusDto.Response updateByUserId(UUID userId, UserStatusDto.UpdateRequest request);

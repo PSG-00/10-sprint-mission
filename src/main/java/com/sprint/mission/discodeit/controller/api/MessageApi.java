@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,7 +83,13 @@ public interface MessageApi {
     @ApiResponse(responseCode = "200", description = "Message 목록 조회 성공",
             content = @Content(schema = @Schema(implementation = PageResponse.class)))
     ResponseEntity<PageResponse<MessageDto.Response>> findAllByChannelId(
-            @Parameter(description = "조회할 Channel ID") @RequestParam("channelId") UUID channelId,
-            @Parameter(description = "페이징 정보(page, size, sort)") @ParameterObject Pageable pageable
+            @Parameter(description = "조회할 Channel ID")
+            @RequestParam("channelId") UUID channelId,
+
+            @Parameter(description = "페이징 시작점 커서 (이전 응답의 nextCursor 값)", example = "2026-03-09T18:16:28Z")
+            @RequestParam(value = "cursor", required = false) Instant cursor,
+
+            @Parameter(description = "페이징 크기 및 정렬")
+            @ParameterObject Pageable pageable
     );
 }

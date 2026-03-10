@@ -54,7 +54,7 @@ public class User extends BaseUpdateEntity {
         }
     }
 
-    // UserStatusd와 User의 연관관계 편의 메서드
+    // UserStatus와 User의 연관관계 편의 메서드
     public void setStatus(UserStatus status) {
         if (this.status != null) {
             this.status.setUser(null);

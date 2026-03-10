@@ -60,6 +60,17 @@ public class BasicUserStatusService implements UserStatusService {
     }
 
     @Override
+    public UserStatusDto.Response findByUserId(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NoSuchElementException("해당 유저를 찾을 수 없습니다: " + userId);
+        }
+
+        return userStatusRepository.findByUserId(userId)
+                .map(userStatusMapper::toResponse)
+                .orElseThrow(() -> new IllegalStateException("(무결성 오류! 해당 유저의 상태 정보가 없습니다: " + userId));
+    }
+
+    @Override
     public List<UserStatusDto.Response> findAll() {
         return userStatusRepository.findAll().stream()
                 .map(userStatusMapper::toResponse)
