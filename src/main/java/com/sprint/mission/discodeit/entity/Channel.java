@@ -14,6 +14,7 @@ import java.time.Instant;
 public class Channel extends BaseUpdateEntity {
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
     private ChannelType type;
 
     @Column(name = "name")

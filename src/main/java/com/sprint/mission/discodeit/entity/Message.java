@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "messages")
 public class Message extends BaseUpdateEntity {
 
-    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
     //
     @ManyToOne(fetch = FetchType.LAZY)
