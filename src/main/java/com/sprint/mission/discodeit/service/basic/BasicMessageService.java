@@ -8,14 +8,17 @@ import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -63,25 +66,38 @@ public class BasicMessageService implements MessageService {
     }
 
     @Override
-    public PageResponse<MessageDto.Response> findAllByChannelId(UUID channelId, Pageable pageable) {
+    public PageResponse<MessageDto.Response> findAllByChannelId(UUID channelId, Instant cursor, Pageable pageable) {
 
         if(!channelRepository.existsById(channelId)) {
             throw new NoSuchElementException("해당 채널을 찾을 수 없습니다: " + channelId);
         }
 
-        Slice<Message> messageSlice = messageRepository.findAllByChannelId(channelId, pageable);
+        Sort sort = pageable.getSort().isSorted()
+                ? pageable.getSort()
+                : Sort.by(Sort.Direction.DESC, "createdAt");
+
+        Pageable cursorPageable = PageRequest.of(0, pageable.getPageSize(), sort);
+
+        Slice<Message> messageSlice;
+        if (cursor == null) {
+            messageSlice = messageRepository.findLatestByChannelId(channelId, cursorPageable);
+        } else {
+            messageSlice = messageRepository.findAllUseCursorByChannelId(channelId, cursor, cursorPageable);
+        }
 
         // messageSlice의 content인 message를 MessageDto.Response로 변환
         Slice<MessageDto.Response> responseSlice = messageSlice.map(messageMapper::toResponse);
 
-        // messageSlice를 DTO로 변환
-        return pageResponseMapper.fromSlice(responseSlice);
+        String nextCursor = null;
+        if (responseSlice.hasNext() && !responseSlice.getContent().isEmpty()) {
+            MessageDto.Response lastMessage = responseSlice.getContent()
+                    .get(responseSlice.getContent().size() - 1);
+            nextCursor = lastMessage.createdAt().toString();
+        }
 
-//        Page<Message> messagePage = messageRepository.findAllByChannelId(channelId, pageable);
-//
-//        Page<MessageDto.Response> responsePage = messagePage.map(messageMapper::toResponse);
-//
-//        return pageResponseMapper.fromPage(responsePage);
+
+        // messageSlice를 DTO로 변환
+        return pageResponseMapper.fromSlice(responseSlice, nextCursor);
     }
 
     @Override

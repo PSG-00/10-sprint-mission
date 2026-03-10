@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -63,10 +64,10 @@ public class MessageController implements MessageApi {
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<PageResponse<MessageDto.Response>> findAllByChannelId(
             @RequestParam("channelId") UUID channelId,
+            @RequestParam(value = "cursor", required = false) Instant cursor,
             @ParameterObject Pageable pageable) {
-        PageResponse<MessageDto.Response> responsePage = messageService.findAllByChannelId(channelId, pageable);
+        PageResponse<MessageDto.Response> responsePage = messageService.findAllByChannelId(channelId, cursor, pageable);
         return ResponseEntity.ok(responsePage);
-
     }
 
     public List<UUID> uploadMessageFiles(List<MultipartFile> files) {
