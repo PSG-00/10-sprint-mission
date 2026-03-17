@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -58,6 +59,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), errorMessage));
+    }
+
+    // 용량 초과 예외 핸들러
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+        int status = HttpStatus.PAYLOAD_TOO_LARGE.value();
+        String message = "업로드 가능한 최대 용량을 초과했습니다. (개별 파일 최대 10MB, 총합 50MB 이하만 가능)";
+        ErrorResponse errorResponse = ErrorResponse.of(status, message);
+        log.warn("⚠️ 파일 용량 초과 발생: {}", e.getMessage());
+
+        return ResponseEntity
+                .status(status)
+                .body(errorResponse);
     }
 
     // 파일 저장 실패 등 서버 내부에서 제어할 수 없는 입출력 오류 처리

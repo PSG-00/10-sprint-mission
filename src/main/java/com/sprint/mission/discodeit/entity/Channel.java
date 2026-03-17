@@ -1,28 +1,32 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdateEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.time.Instant;
-import java.util.UUID;
 
+@Entity
+@NoArgsConstructor
 @Getter
-public class Channel implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private UUID id;
-    private Instant createdAt;
-    private Instant updatedAt;
-    //
+@Table(name = "channels")
+public class Channel extends BaseUpdateEntity {
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
     private ChannelType type;
+
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "description")
     private String description;
     //
+    @Column(name = "last_message_at") // 채널의 마지막 메시지 비정규화
     private Instant lastMessageAt;
 
     public Channel(ChannelType type, String name, String description) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        //
         this.type = type;
         this.name = name;
         this.description = description;
@@ -30,18 +34,11 @@ public class Channel implements Serializable {
     }
 
     public void update(String newName, String newDescription) {
-        boolean anyValueUpdated = false;
         if (newName != null && !newName.equals(this.name)) {
             this.name = newName;
-            anyValueUpdated = true;
         }
         if (newDescription != null && !newDescription.equals(this.description)) {
             this.description = newDescription;
-            anyValueUpdated = true;
-        }
-
-        if (anyValueUpdated) {
-            this.updatedAt = Instant.now();
         }
     }
 

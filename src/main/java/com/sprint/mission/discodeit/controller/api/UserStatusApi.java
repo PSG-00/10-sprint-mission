@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.controller.api;
 
+import com.sprint.mission.discodeit.dto.UserStatusDto;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,7 +25,7 @@ public interface UserStatusApi {
             @ApiResponse(responseCode = "404", description = "UserStatus를 찾을 수 없음",
                     content = @Content(examples = @ExampleObject(value = "UserStatus with userId {userId} not found")))
     })
-    ResponseEntity<UserStatus> findByUserId(
+    ResponseEntity<UserStatusDto.Response> findByUserId(
             @Parameter(description = "조회할 User ID") @PathVariable UUID userId
     );
 }

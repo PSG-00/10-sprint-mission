@@ -7,6 +7,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface UserStatusMapper {
-    @Mapping(target = "online", expression = "java(userStatus.isOnline())")
+    @Mapping(target = "userId", source = "user.id")
     UserStatusDto.Response toResponse(UserStatus userStatus);
 }

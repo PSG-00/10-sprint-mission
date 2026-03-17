@@ -17,11 +17,8 @@ public class UserStatusDto {
     @Schema(name = "UserStatusResponse", description = "UserStatus 응답 정보")
     public record Response(
             UUID id,
-            Instant createdAt,
-            Instant updatedAt,
             UUID userId,
-            Instant lastActiveAt,
-            boolean online
+            Instant lastActiveAt
     ) {}
 
     @Schema(name = "UserStatusUpdateRequest", description = "변경할 User 온라인 상태 정보")

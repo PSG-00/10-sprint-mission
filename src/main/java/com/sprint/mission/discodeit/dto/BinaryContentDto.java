@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.Instant;
 import java.util.UUID;
 
 public class BinaryContentDto {
@@ -23,11 +22,9 @@ public class BinaryContentDto {
     @Schema(name = "BinaryContentResponse", description = "BinaryContent 응답 정보")
     public record Response(
             UUID id,
-            Instant createdAt,
             String fileName,
-            String contentType,
-            byte[] bytes,
-            long size
+            long size,
+            String contentType
     ) {}
 
 }

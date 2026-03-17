@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
-import java.time.Instant;
 import java.util.UUID;
 
 public class UserDto {
@@ -25,12 +24,10 @@ public class UserDto {
     @Schema(name = "UserResponse", description = "User 응답 정보")
     public record Response(
             UUID id,
-            Instant createdAt,
-            Instant updatedAt,
             String username,
             String email,
-            UUID profileId,   // 이미지 ID
-            boolean online       // UserStatus에서 계산된 값
+            BinaryContentDto.Response profile,   // 이미지 ID
+            boolean online
     ) {}
 
     @Schema(name = "UserUpdateRequest", description = "수정할 User 정보")
