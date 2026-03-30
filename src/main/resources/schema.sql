@@ -1,15 +1,15 @@
-CREATE TABLE binary_contents (
+CREATE TABLE IF NOT EXISTS binary_contents (
     id UUID PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     file_name VARCHAR(255) NOT NULL,
     size BIGINT NOT NULL,
     content_type VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(60) NOT NULL,
@@ -21,12 +21,12 @@ CREATE TABLE users (
         ON DELETE SET NULL
 );
 
-CREATE TABLE user_statuses (
+CREATE TABLE IF NOT EXISTS user_statuses (
     id UUID PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     user_id UUID NOT NULL UNIQUE,
-    last_active_at TIMESTAMPTZ NOT NULL,
+    last_active_at TIMESTAMP WITH TIME ZONE NOT NULL,
 
     CONSTRAINT fk_user_statuses_user
         FOREIGN KEY (user_id)
@@ -34,26 +34,26 @@ CREATE TABLE user_statuses (
         ON DELETE CASCADE
 );
 
-CREATE TABLE channels (
+CREATE TABLE IF NOT EXISTS channels (
     id UUID PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     name VARCHAR(100),
     description VARCHAR(500),
     type VARCHAR(10) NOT NULL DEFAULT ('PUBLIC'),
-    last_message_at TIMESTAMPTZ,
+    last_message_at TIMESTAMP WITH TIME ZONE,
 
     CONSTRAINT ck_channels_type
         CHECK (type IN ('PUBLIC', 'PRIVATE'))
 );
 
-CREATE TABLE read_statuses (
+CREATE TABLE IF NOT EXISTS read_statuses (
     id UUID PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     user_id UUID NOT NULL,
     channel_id UUID NOT NULL,
-    last_read_at TIMESTAMPTZ NOT NULL,
+    last_read_at TIMESTAMP WITH TIME ZONE NOT NULL,
 
     CONSTRAINT uq_read_statuses_user_channel
         UNIQUE (user_id, channel_id),
@@ -69,10 +69,10 @@ CREATE TABLE read_statuses (
         ON DELETE CASCADE
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id UUID PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     content TEXT,
     channel_id UUID NOT NULL,
     author_id UUID,
@@ -88,7 +88,7 @@ CREATE TABLE messages (
         ON DELETE SET NULL
 );
 
-CREATE TABLE message_attachments (
+CREATE TABLE IF NOT EXISTS message_attachments (
     message_id UUID NOT NULL,
     attachment_id UUID NOT NULL,
 

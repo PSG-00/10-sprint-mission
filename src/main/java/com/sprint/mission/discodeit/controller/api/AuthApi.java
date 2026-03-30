@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -19,11 +20,11 @@ public interface AuthApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공",
                     content = @Content(schema = @Schema(implementation = UserDto.Response.class))),
-            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
-                    content = @Content(examples = @ExampleObject(value = "User with username {username} not found"))),
-            @ApiResponse(responseCode = "400", description = "비밀번호가 일치하지 않음",
-                    content = @Content(examples = @ExampleObject(value = "Wrong password")))
+            @ApiResponse(responseCode = "401", description = "사용자명 또는 비밀번호가 일치하지 않음",
+                    content = @Content(examples = @ExampleObject(value = "Login failed"))),
     })
-    ResponseEntity<UserDto.Response> login(@RequestBody LoginDto.LoginRequest request);
+    ResponseEntity<UserDto.Response> login(
+            @RequestBody LoginDto.LoginRequest request,
+            HttpServletRequest httpRequest);
 }
 
