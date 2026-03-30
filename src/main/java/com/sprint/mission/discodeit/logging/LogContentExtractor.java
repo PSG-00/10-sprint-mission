@@ -39,7 +39,7 @@ public class LogContentExtractor {
     // 2. Response Body 추출 및 가공
     public String extractResponseBody(HttpServletResponse response, HttpServletRequest request) {
         // 다운로드 API 생략
-        if (request.getRequestURI().contains("/download")) {
+        if (request.getRequestURI().contains("/download") && response.getStatus() < 400) {
             return "[File Download Completed - Body Omitted]";
         }
 

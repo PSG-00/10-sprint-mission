@@ -24,8 +24,8 @@ public class GlobalExceptionHandler {
         HttpStatus status = ex.getErrorCode().getStatus();
 
         if (status.is5xxServerError()) {
-            log.error("Server Side Custom Error - {}: {}",
-                    ex.getClass().getSimpleName(), ex.getMessage(), ex);
+            log.error("Server Side Custom Error - {}: {} | Details: {} | StackTrace:",
+                    ex.getClass().getSimpleName(), ex.getMessage(), ex.getDetails(), ex);
         } else {
             log.warn("Client Side Custom Error - {}: {} | Details: {}",
                     ex.getClass().getSimpleName(), ex.getMessage(), ex.getDetails());
