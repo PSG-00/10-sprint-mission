@@ -31,7 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("BasicUserService 단위 테스트 (Coverage 100%)")
+@DisplayName("BasicUserService 단위 테스트")
 class BasicUserServiceTest {
 
     @Mock private UserRepository userRepository;
