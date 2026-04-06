@@ -2,6 +2,8 @@
 .discodeit
 .logs
 discodeit/storage
+.env
+.dockerignore
 
 
 build/
