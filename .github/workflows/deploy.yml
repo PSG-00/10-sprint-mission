@@ -56,7 +56,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # [수정 1] 정확한 Secrets 이름 사용
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Configure AWS credentials for ECS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -64,30 +66,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Update task definition with new image
-        env:
-          NEW_IMAGE: ${{ env.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
-        run: |
-          aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION --query taskDefinition > task-definition.json
-          # 주의: "discodeit-app"이 실제 컨테이너 이름과 맞는지 꼭 확인!
-          jq --arg img "$NEW_IMAGE" '
-            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy) | 
-            (.containerDefinitions[] | select(.name == "discodeit-app")).image = $img
-          ' task-definition.json > new-task-def.json
+      # 1. GitHub에 있는 JSON 파일을 읽어서 새 이미지 주소를 쏙 끼워 넣습니다.
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json # 방금 깃허브에 올린 파일 이름
+          container-name: discodeit-app         # 교체할 컨테이너 이름 (정확히 확인!)
+          image: ${{ env.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
 
-      # [수정 3] 분리되어 있던 단계를 하나로 합치고 강제 배포 옵션 추가
-      - name: Register and update ECS service
-        run: |
-          # 1. 새 태스크 정의 등록
-          NEW_TASK_INFO=$(aws ecs register-task-definition --cli-input-json file://new-task-def.json)
-          NEW_REVISION=$(echo $NEW_TASK_INFO | jq '.taskDefinition.revision')
-          
-          # 2. 새 리비전으로 강제 배포 (desired-count 1로 덮어쓰기)
-          aws ecs update-service --cluster $ECS_CLUSTER \
-                                 --service $ECS_SERVICE \
-                                 --task-definition $ECS_TASK_DEFINITION:$NEW_REVISION \
-                                 --desired-count 1 \
-                                 --force-new-deployment
-          
-          # 3. 배포가 안정화될 때까지 대기
-          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE
+      # 2. 렌더링된 태스크 정의를 AWS에 등록하고 서비스를 강제 업데이트합니다.
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true # 여기서 서비스 안정화 대기까지 다 해줍니다.
+          force-new-deployment: true       # 강제 배포
