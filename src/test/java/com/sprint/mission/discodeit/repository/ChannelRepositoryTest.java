@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@EnableJpaAuditing
 @DisplayName("ChannelRepository 슬라이스 테스트")
 class ChannelRepositoryTest {
 
