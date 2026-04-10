@@ -100,7 +100,6 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
                 .body(resource);
     }
 
-    @Override
     public void delete(UUID binaryContentId) {
         Path path = resolvePath(binaryContentId);
         try {

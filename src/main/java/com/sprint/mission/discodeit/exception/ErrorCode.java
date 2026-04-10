@@ -38,6 +38,18 @@ public enum ErrorCode {
     FILE_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_001", "파일 처리 중 오류가 발생했습니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "FILE_002", "잘못된 파일 타입입니다."),
 
+    // S3 Upload
+    S3_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3_001", "S3 파일 업로드 중 오류가 발생했습니다."),
+    S3_UPLOAD_BUCKET_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "S3_002", "S3 업로드 대상 버킷이 존재하지 않습니다."),
+    S3_UPLOAD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S3_003", "S3 버킷에 대한 쓰기 권한이 없습니다."),
+
+    // S3 Download
+    S3_DOWNLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3_004", "S3 파일 다운로드 중 오류가 발생했습니다."),
+    S3_DOWNLOAD_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "S3_005", "S3 버킷에 해당 파일이 존재하지 않습니다."),
+    S3_DOWNLOAD_BUCKET_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "S3_006", "S3 다운로드 대상 버킷이 존재하지 않습니다."),
+    S3_DOWNLOAD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S3_007", "S3 버킷에 대한 읽기 권한이 없습니다."),
+    S3_DOWNLOAD_PRESIGN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3_008", "S3 파일 다운로드 URL 생성에 실패했습니다."),
+
     // ETC
     DATABASE_CONFLICT(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_001", "DB에 데이터 저장 중 오류가 발생했습니다."),
     DATA_INTEGRITY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_002", "데이터 무결성 오류가 발생했습니다.");

@@ -4,6 +4,7 @@
 discodeit/storage
 .env
 .dockerignore
+test_output.log
 
 
 build/

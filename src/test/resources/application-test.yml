@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: test
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
     driver-class-name: org.h2.Driver
@@ -22,5 +20,6 @@ spring:
 logging:
   level:
     org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
-    com.sprint.mission.discodeit: DEBUG
+    org.hibernate.orm.jdbc.bind: info
+    com.sprint.mission.discodeit: info
+    root: info
