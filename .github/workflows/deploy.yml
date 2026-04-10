@@ -70,7 +70,10 @@ jobs:
         run: |
           aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION --query taskDefinition > task-definition.json
           # 주의: "discodeit-app"이 실제 컨테이너 이름과 맞는지 꼭 확인!
-          jq --arg img "$NEW_IMAGE" '(.containerDefinitions[] | select(.name == "discodeit-app")).image = $img' task-definition.json > new-task-def.json
+          jq --arg img "$NEW_IMAGE" '
+            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy) | 
+            (.containerDefinitions[] | select(.name == "discodeit-app")).image = $img
+          ' task-definition.json > new-task-def.json
 
       # [수정 3] 분리되어 있던 단계를 하나로 합치고 강제 배포 옵션 추가
       - name: Register and update ECS service
