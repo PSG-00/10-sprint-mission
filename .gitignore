@@ -6,7 +6,6 @@ discodeit/storage
 .dockerignore
 test_output.log
 
-
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
