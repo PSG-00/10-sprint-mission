@@ -21,7 +21,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # [수정 1] 정확한 Secrets 이름 사용
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -35,7 +34,6 @@ jobs:
         with:
           registry-type: public
 
-      # [수정 2] 정확한 id와 GITHUB_OUTPUT 사용
       - name: Set Image Tag
         id: set-tag
         run: |
@@ -66,13 +64,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 1. GitHub에 있는 JSON 파일을 읽어서 새 이미지 주소를 쏙 끼워 넣습니다.
+      # 1. GitHub에 있는 JSON 파일을 읽어서 새 이미지 주소를 끼워 넣습니다.
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json # 방금 깃허브에 올린 파일 이름
-          container-name: discodeit-app         # 교체할 컨테이너 이름 (정확히 확인!)
+          container-name: discodeit-app         # 교체할 컨테이너 이름
           image: ${{ env.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
 
       # 2. 렌더링된 태스크 정의를 AWS에 등록하고 서비스를 강제 업데이트합니다.
