@@ -4,7 +4,6 @@ on:
     branches:
       - release
 
-# 환경 변수 사전 정의 (GitHub Variables에서 가져옴)
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPOSITORY_URI: ${{ vars.ECR_REPOSITORY_URI }}
@@ -13,17 +12,16 @@ env:
   ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
 
 jobs:
-  # Docker 이미지 빌드 및 푸쉬 Job 설정
   build-and-push:
     runs-on: ubuntu-latest
-    outputs:
+    outputs: # 다음 Job으로 넘겨줄 변수 선언
       image_tag: ${{ steps.set-tag.outputs.IMAGE_TAG }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # 1. AWS 자격 증명 설정 (Public ECR 로그인을 위해 us-east-1 우선 설정)
+      # [수정 1] 정확한 Secrets 이름 사용
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -31,20 +29,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: us-east-1
 
-      # 2. Public ECR 로그인
       - name: Login to Amazon Public ECR
         id: login-ecr-public
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-type: public
 
-      # 3. Docker 이미지 빌드 및 푸시
+      # [수정 2] 정확한 id와 GITHUB_OUTPUT 사용
       - name: Set Image Tag
         id: set-tag
         run: |
           TAG=${GITHUB_SHA::7}
-          echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT # OUTPUT 추가
           echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         env:
@@ -54,22 +51,14 @@ jobs:
           docker push $ECR_REPOSITORY_URI:$IMAGE_TAG
           docker push $ECR_REPOSITORY_URI:latest
 
-      # 4. ECS 업데이트를 위해 리전을 원래 리전으로 변경
-      - name: Configure AWS credentials for ECS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          aws-region: ${{ vars.AWS_REGION }}
-
-
-# ECS 서비스 업데이트 Job 설정
   update-ecs:
-    needs: build-and-push # Job 1이 성공적으로 끝나야만 실행됨
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-      # [Step 1] AWS CLI를 설정 (ECS 배포용 리전: AWS_REGION / ap-northeast-2)
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Configure AWS credentials for ECS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -77,40 +66,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-     # [Step 2] 기존 태스크 정의를 기반으로 새 이미지를 사용하도록 파일 업데이트
-      - name: Update task definition with new image
-        env:
-          NEW_IMAGE: ${{ env.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
-        run: |
-          # 1. 현재 태스크 정의 다운로드
-          aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION --query taskDefinition > task-definition.json
-        
-          # 2. jq를 사용하여 컨테이너의 image 속성을 새 이미지(7자리 해시 태그)로 교체
-          # 참고: "discodeit-container" 부분은 본인의 ECS 컨테이너 이름과 일치해야 합니다.
-          jq --arg img "$NEW_IMAGE" '(.containerDefinitions[] | select(.name == "discodeit-app")).image = $img' task-definition.json > new-task-def.json
+      # 1. GitHub에 있는 JSON 파일을 읽어서 새 이미지 주소를 쏙 끼워 넣습니다.
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json # 방금 깃허브에 올린 파일 이름
+          container-name: discodeit-app         # 교체할 컨테이너 이름 (정확히 확인!)
+          image: ${{ env.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
 
-      # [Step 3] 프리티어 리소스를 고려해 기존 서비스 중단
-      - name: Stop existing ECS service
-        run: |
-          aws ecs update-service --cluster $ECS_CLUSTER \
-                                 --service $ECS_SERVICE \
-                                 --desired-count 0
-          
-          # (안전장치) 컨테이너가 완전히 내려갈 때까지 잠시 대기
-          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE
-
-    # [Step 4] 새로 등록한 태스크 정의를 사용하도록 ECS 서비스 업데이트
-      - name: Register and update ECS service
-        run: |
-          # 1. 수정된 json 파일로 새 태스크 정의 등록
-          NEW_TASK_INFO=$(aws ecs register-task-definition --cli-input-json file://new-task-def.json)
-          
-          # 2. 새로 발급된 리비전(Revision) 번호 추출
-          NEW_REVISION=$(echo $NEW_TASK_INFO | jq '.taskDefinition.revision')
-        
-          # 3. 새 리비전을 적용하고 desired-count를 다시 1로 올려서 배포
-          aws ecs update-service --cluster $ECS_CLUSTER \
-                                 --service $ECS_SERVICE \
-                                 --task-definition $ECS_TASK_DEFINITION:$NEW_REVISION \
-                                 --desired-count 1
-
+      # 2. 렌더링된 태스크 정의를 AWS에 등록하고 서비스를 강제 업데이트합니다.
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true # 여기서 서비스 안정화 대기까지 다 해줍니다.
+          force-new-deployment: true       # 강제 배포
