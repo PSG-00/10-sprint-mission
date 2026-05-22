@@ -66,7 +66,7 @@ class BasicMessageServiceTest {
         ReflectionTestUtils.setField(message, "id", messageId);
         ReflectionTestUtils.setField(message, "createdAt", Instant.now());
 
-        UserDto.Response authorResponse = new UserDto.Response(authorId, "tester", "test@test.com", null, true);
+        UserDto.Response authorResponse = new UserDto.Response(authorId, "tester", "test@test.com", null, true, Role.USER);
         messageResponse = new MessageDto.Response(messageId, Instant.now(), Instant.now(), "Hello", channelId, authorResponse, List.of());
     }
 

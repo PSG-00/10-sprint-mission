@@ -11,6 +11,7 @@ import com.sprint.mission.discodeit.dto.UserDto.Response;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelParticipantException;
@@ -113,8 +114,8 @@ class BasicChannelServiceTest {
             given(user1.getId()).willReturn(user1Id);
             given(user2.getId()).willReturn(user2Id);
 
-            UserDto.Response user1Response = new Response(user1Id, "user1", "", null, true);
-            UserDto.Response user2Response = new Response(user2Id, "user2", "", null, true);
+            UserDto.Response user1Response = new Response(user1Id, "user1", "", null, true, Role.USER);
+            UserDto.Response user2Response = new Response(user2Id, "user2", "", null, true, Role.USER);
 
             given(userMapper.toResponse(user1)).willReturn(user1Response);
             given(userMapper.toResponse(user2)).willReturn(user2Response);

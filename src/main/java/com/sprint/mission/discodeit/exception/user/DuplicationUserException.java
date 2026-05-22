@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public class DuplicationUserException extends UserException {
 
-    public DuplicationUserException(Map<String, Object> details) {
+    private DuplicationUserException(Map<String, Object> details) {
         super(ErrorCode.DUPLICATE_USER, details);
     }
 

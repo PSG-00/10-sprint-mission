@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public class S3UploadException extends DiscodeitException {
 
-    public S3UploadException(ErrorCode errorCode, Map<String, Object> details, Throwable cause) {
+    private S3UploadException(ErrorCode errorCode, Map<String, Object> details, Throwable cause) {
         super(errorCode, details, cause);
     }
 

@@ -31,3 +31,4 @@ logging:
     root: info
     com.sprint.mission.discodeit: debug
     org.hibernate.orm.queries: debug
+    org.springframework.security: TRACE

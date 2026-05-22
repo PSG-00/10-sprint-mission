@@ -15,6 +15,7 @@ import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -131,6 +132,7 @@ public class BasicMessageService implements MessageService {
         return pageResponseMapper.fromSlice(responseSlice, nextCursor);
     }
 
+    @PreAuthorize("@messageAuth.isAuthor(#messageId, principal.userDto.id)")
     @Override
     @Transactional
     public MessageDto.Response update(UUID messageId, MessageDto.UpdateRequest request) {
@@ -145,6 +147,7 @@ public class BasicMessageService implements MessageService {
         return messageMapper.toResponse(message);
     }
 
+    @PreAuthorize("@messageAuth.isAuthor(#messageId, principal.userDto.id)")
     @Override
     @Transactional
     public void delete(UUID messageId) {

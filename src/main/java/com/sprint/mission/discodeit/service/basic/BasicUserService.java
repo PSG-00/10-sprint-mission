@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
@@ -11,10 +12,12 @@ import com.sprint.mission.discodeit.exception.user.DuplicationUserException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
+import com.sprint.mission.discodeit.service.AuthService;
 import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,30 +39,45 @@ public class BasicUserService implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final ChannelRepository channelRepository;
+    private final AuthService authService;
 
     @Override
     @Transactional
     public UserDto.Response create(UserDto.CreateRequest request, UUID profileId) {
-        String username = request.username();
-        String email = request.email();
-        validateUser(null, username, email);
-        String password = passwordEncoder.encode(request.password());
+        User user = createUser(
+            request.username(),
+            request.email(),
+            request.password(),
+            profileId,
+            Role.USER
+        );
+        return toDto(user);
+    }
 
-        BinaryContent profile = (profileId == null) ? null :
-                binaryContentRepository.findById(profileId)
-                        .orElseThrow(() -> BinaryContentNotFoundException.withId(profileId));
+    @Override
+    @Transactional
+    public void createAdmin(String username, String email, String rawPassword) {
+        createUser(
+            username,
+            email,
+            rawPassword,
+    null,
+            Role.ADMIN
+        );
+    }
 
-        User user = new User(username, email, password, profile);
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    @Override
+    public UserDto.Response updateRole(UUID userId, Role newRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> UserNotFoundException.withId(userId));
 
-        user.setStatus(new UserStatus(user, Instant.now()));
+        user.updateRole(newRole);
 
-        try { // 레이스 컨디션
-            User savedUser = userRepository.saveAndFlush(user);
-            log.info("[User Created] ID: {}, Username: {}, Email: {}", savedUser.getId(), username, email);
-            return toDto(savedUser);
-        } catch (DataIntegrityViolationException e) {
-            throw DatabaseConflictException.withUser(username, email, e);
-        }
+        authService.expireUserSessions(userId);
+
+        return toDto(user);
     }
 
     @Override
@@ -84,6 +102,7 @@ public class BasicUserService implements UserService {
         return users;
     }
 
+    @PreAuthorize("hasRole('ADMIN') or principal.userDto.id == #userId")
     @Override
     @Transactional
     public UserDto.Response update(UUID userId, UserDto.UpdateRequest request, UUID newProfileId) {
@@ -117,6 +136,7 @@ public class BasicUserService implements UserService {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN') or principal.userDto.id == #userId")
     @Override
     @Transactional
     public void delete(UUID userId) {
@@ -153,12 +173,41 @@ public class BasicUserService implements UserService {
     }
 
     // Helper
-    public UserDto.Response toDto(User user) {
+    private UserDto.Response toDto(User user) {
         UserStatus userStatus = Optional.ofNullable(user.getStatus())
                 .orElseThrow(() -> InternalServerException.dataIntegrity(
                         "유저(ID: %s)의 상태 정보가 누락되었습니다.", user.getId()
                 ));
 
         return userMapper.toResponse(user);
+    }
+
+    private User createUser(
+        String username,
+        String email,
+        String rawPassword,
+        UUID profileId,
+        Role role
+    ) {
+        validateUser(null, username, email);
+
+        String encodedPassword = passwordEncoder.encode(rawPassword);
+
+        BinaryContent profile = profileId == null
+            ? null
+            : binaryContentRepository.findById(profileId)
+              .orElseThrow(() -> BinaryContentNotFoundException.withId(profileId));
+
+        User user = new User(username, email, encodedPassword, profile, role);
+        user.setStatus(new UserStatus(user, Instant.now()));
+
+        try {
+            User savedUser = userRepository.saveAndFlush(user);
+            log.info("[User Created] ID: {}, Username: {}, Email: {}, Role: {}",
+                savedUser.getId(), username, email, role);
+            return savedUser;
+        } catch (DataIntegrityViolationException e) {
+            throw DatabaseConflictException.withUser(username, email, e);
+        }
     }
 }

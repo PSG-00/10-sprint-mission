@@ -35,7 +35,7 @@ dependencies {
     runtimeOnly 'com.h2database:h2'                                         // 테스트/개발용 인메모리 DB
 
     // 3. Security & Cloud (보안 및 인프라)
-    implementation 'org.springframework.security:spring-security-crypto'    // 비밀번호 암호화 (BCrypt 등)
+    implementation 'org.springframework.boot:spring-boot-starter-security'    // 비밀번호 암호화 등
     implementation 'software.amazon.awssdk:s3:2.31.7'                       // AWS S3 파일 업로드 관련
 
     // 4. View & Documentation (화면 구성 및 API 명세)

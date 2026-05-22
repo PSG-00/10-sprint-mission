@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.*;
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
@@ -61,7 +62,7 @@ class BasicUserServiceTest {
         ReflectionTestUtils.setField(user, "id", userId);
         user.setStatus(new UserStatus(user, Instant.now()));
 
-        userResponse = new UserDto.Response(userId, "tester", "test@test.com", null, true);
+        userResponse = new UserDto.Response(userId, "tester", "test@test.com", null, true, Role.USER);
 
         // 2. 공통 요청(Request) 객체 초기화
         createRequest = new UserDto.CreateRequest("tester", "test@test.com", "password");
@@ -99,7 +100,7 @@ class BasicUserServiceTest {
             // given
             BinaryContent profile = mock(BinaryContent.class);
             BinaryContentDto.Response profileResponse = new BinaryContentDto.Response(profileId, "test.jpg", 1L, "");
-            UserDto.Response expectedUserResponse = new UserDto.Response(userId, "tester", "test@test.com", profileResponse, true);
+            UserDto.Response expectedUserResponse = new UserDto.Response(userId, "tester", "test@test.com", profileResponse, true, Role.USER);
 
             given(binaryContentRepository.findById(profileId)).willReturn(Optional.of(profile));
             given(userMapper.toResponse(any())).willReturn(expectedUserResponse);

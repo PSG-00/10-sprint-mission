@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.controller.api.UserApi;
 import com.sprint.mission.discodeit.dto.UserDto;
+import com.sprint.mission.discodeit.dto.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.UserStatusDto;
 import com.sprint.mission.discodeit.exception.etc.InvalidFileTypeException;
 import com.sprint.mission.discodeit.service.BinaryContentService;
@@ -73,6 +74,15 @@ public class UserController implements UserApi {
             @PathVariable("userId") UUID userId,
             @RequestBody @Valid UserStatusDto.UpdateRequest request) {
         UserStatusDto.Response response = userStatus.updateByUserId(userId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    @RequestMapping(method = RequestMethod.PUT, value = "/{userId}/role")
+    public ResponseEntity<UserDto.Response> updateUserRole(
+        @PathVariable("userId") UUID userId,
+        @RequestBody @Valid UserRoleUpdateRequest request) {
+        UserDto.Response response = userService.updateRole(userId, request.newRole());
         return ResponseEntity.ok(response);
     }
 
