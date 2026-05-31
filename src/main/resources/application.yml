@@ -41,6 +41,13 @@ aws:
     bucket: ${AWS_S3_BUCKET}
     presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600} # (기본값: 10분)
 
+#JWT 토큰 설정
+jwt:
+  key: ${JWT_KEY:key1321312312312312312312321321321312321241}
+  access-token-expiration-minutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:60}
+  refresh-token-expiration-minutes: ${JWT_REFRESH_TOKEN_EXPIRATION_MINUTES:1440}
+
+
 # Actuator 설정
 management:
    endpoints:

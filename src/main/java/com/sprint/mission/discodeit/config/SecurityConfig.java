@@ -5,14 +5,17 @@ import static org.springframework.boot.autoconfigure.security.servlet.PathReques
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.auth.handler.DiscodeitAccessDeniedHandler;
 import com.sprint.mission.discodeit.auth.handler.DiscodeitAuthenticationEntryPoint;
+import com.sprint.mission.discodeit.auth.handler.JwtLoginSuccessHandler;
+import com.sprint.mission.discodeit.auth.handler.JwtLogoutHandler;
 import com.sprint.mission.discodeit.auth.handler.LoginFailureHandler;
-import com.sprint.mission.discodeit.auth.handler.LoginSuccessHandler;
 import com.sprint.mission.discodeit.auth.handler.SpaCsrfTokenRequestHandler;
+import com.sprint.mission.discodeit.auth.jwt.InMemoryJwtRegistry;
+import com.sprint.mission.discodeit.auth.jwt.JwtAuthenticationFilter;
+import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -20,12 +23,13 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
@@ -36,12 +40,14 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(
       HttpSecurity http,
-      LoginSuccessHandler loginSuccessHandler,
+      JwtLoginSuccessHandler jwtLoginSuccessHandler,
+      JwtLogoutHandler jwtlogoutHandler,
       LoginFailureHandler loginFailureHandler,
       DiscodeitAuthenticationEntryPoint authenticationEntryPoint,
       DiscodeitAccessDeniedHandler accessDeniedHandler,
       DiscodeitUserDetailsService discodeitUserDetailsService,
-      SessionRegistry sessionRegistry) throws Exception {
+      JwtAuthenticationFilter jwtAuthenticationFilter
+  ) throws Exception {
 
     http
         // SPA 환경을 위한 Cookie 기반 CSRF 및 Plain Token 검증 설정
@@ -63,7 +69,12 @@ public class SecurityConfig {
 
             // 인증/회원 관련 API
             .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/users", "/api/auth/login", "/api/auth/logout").permitAll()
+            .requestMatchers(HttpMethod.POST,
+                "/api/users",
+                "/api/auth/login",
+                "/api/auth/logout",
+                "/api/auth/refresh"
+            ).permitAll()
 
             // 정적 리소스 및 문서 뷰 (API 제외 모든 GET 요청)
             .requestMatchers(HttpMethod.GET, "/").permitAll()
@@ -75,7 +86,7 @@ public class SecurityConfig {
         // 폼 로그인 인프라 구축 (성공/실패 핸들러는 API 응답형 커스텀 빈 사용)
         .formLogin(form -> form
             .loginProcessingUrl("/api/auth/login")
-            .successHandler(loginSuccessHandler)
+            .successHandler(jwtLoginSuccessHandler)
             .failureHandler(loginFailureHandler)
             .permitAll()
         )
@@ -91,9 +102,10 @@ public class SecurityConfig {
         // 로그아웃 설정 (성공 시 204 No Content 반환)
         .logout(logout -> logout
             .logoutUrl("/api/auth/logout")
-            .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
-            .invalidateHttpSession(true)
-            .deleteCookies("JSESSIONID")
+            .addLogoutHandler(jwtlogoutHandler)
+//            .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
+//            .invalidateHttpSession(true)
+//            .deleteCookies("JSESSIONID")
             .permitAll()
         )
 
@@ -110,14 +122,21 @@ public class SecurityConfig {
 
         // 동시성 세션 제어 정책
         .sessionManagement(management -> management
-            .sessionConcurrency(concurrency -> concurrency
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(false) // 새 로그인 시 기존 세션 만료 (Remember-me 호환성)
-                .sessionRegistry(sessionRegistry)
-            )
-        );
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//            .sessionConcurrency(concurrency -> concurrency
+//                .maximumSessions(1)
+//                .maxSessionsPreventsLogin(false) // 새 로그인 시 기존 세션 만료 (Remember-me 호환성)
+//                .sessionRegistry(sessionRegistry)
+//            )
+        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
+  }
+
+  @Bean
+  public JwtRegistry jwtRegistry() {
+    return new InMemoryJwtRegistry(1);
   }
 
   @Bean

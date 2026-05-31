@@ -6,11 +6,19 @@ import java.util.Map;
 
 public class AuthenticationRequiredException extends DiscodeitException {
 
-  private AuthenticationRequiredException(String path, Throwable cause) {
-    super(ErrorCode.AUTHENTICATION_REQUIRED, Map.of("path", path), cause);
+  private AuthenticationRequiredException(Map<String, Object> details, Throwable cause) {
+    super(ErrorCode.AUTHENTICATION_REQUIRED, details, cause);
+  }
+
+  private AuthenticationRequiredException(Map<String, Object> details) {
+    super(ErrorCode.AUTHENTICATION_REQUIRED, details);
   }
 
   public static AuthenticationRequiredException withPath(String path, Throwable cause) {
-    return new AuthenticationRequiredException(path, cause);
+    return new AuthenticationRequiredException(Map.of("path", path), cause);
+  }
+
+  public static AuthenticationRequiredException withDetails(String reason) {
+    return new AuthenticationRequiredException(Map.of("reason", reason));
   }
 }
