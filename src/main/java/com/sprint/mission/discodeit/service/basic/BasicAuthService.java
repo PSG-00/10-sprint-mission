@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BasicAuthService implements AuthService {
 
-//  private final SessionRegistry sessionRegistry;
   private final JwtTokenProvider jwtTokenProvider;
   private final JwtRegistry jwtRegistry;
   private final UserDetailsService userDetailsService;
@@ -45,24 +44,14 @@ public class BasicAuthService implements AuthService {
         .accessToken(newAccessToken)
         .refreshToken(newRefreshToken)
         .build();
-    jwtRegistry.rotateJwtInformation(userDetails.getUserDto().id(), newInfo);
+    jwtRegistry.rotateJwtInformation(refreshToken, newInfo);
 
     // 3. 생성한 객체 반환
     return newInfo;
   }
 
   public void expireUserSessions(UUID userId) {
-//    // 1. SessionRegistry (세션 기반) 만료
-//    sessionRegistry.getAllPrincipals().stream()
-//        .filter(DiscodeitUserDetails.class::isInstance)
-//        .map(DiscodeitUserDetails.class::cast)
-//        .filter(principal -> principal.getUserDto().id().equals(userId))
-//        .forEach(principal ->
-//            sessionRegistry.getAllSessions(principal, false)
-//                .forEach(SessionInformation::expireNow)
-//        );
-
-    // 2. JwtRegistry (토큰 기반) 만료
+    // JwtRegistry에서 해당 사용자의 모든 토큰 정보를 삭제하여 세션 무효화
     jwtRegistry.invalidateJwtInformationByUserId(userId);
   }
 }

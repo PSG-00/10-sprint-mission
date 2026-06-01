@@ -103,9 +103,6 @@ public class SecurityConfig {
         .logout(logout -> logout
             .logoutUrl("/api/auth/logout")
             .addLogoutHandler(jwtlogoutHandler)
-//            .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
-//            .invalidateHttpSession(true)
-//            .deleteCookies("JSESSIONID")
             .permitAll()
         )
 
@@ -123,11 +120,6 @@ public class SecurityConfig {
         // 동시성 세션 제어 정책
         .sessionManagement(management -> management
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//            .sessionConcurrency(concurrency -> concurrency
-//                .maximumSessions(1)
-//                .maxSessionsPreventsLogin(false) // 새 로그인 시 기존 세션 만료 (Remember-me 호환성)
-//                .sessionRegistry(sessionRegistry)
-//            )
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -135,8 +127,8 @@ public class SecurityConfig {
   }
 
   @Bean
-  public JwtRegistry jwtRegistry() {
-    return new InMemoryJwtRegistry(1);
+  public JwtRegistry jwtRegistry(com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider jwtTokenProvider) {
+    return new InMemoryJwtRegistry(jwtTokenProvider);
   }
 
   @Bean

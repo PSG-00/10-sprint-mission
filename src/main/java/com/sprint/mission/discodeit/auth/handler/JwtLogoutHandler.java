@@ -35,12 +35,11 @@ public class JwtLogoutHandler implements LogoutHandler {
           .ifPresent(cookie -> {
             String refreshToken = cookie.getValue();
 
-            // 토큰이 유효한 경우에만 ID를 추출하여 Registry에서 삭제
-            if (jwtTokenProvider.validateToken(refreshToken)) {
+            // 토큰이 유효하고, 실제 레지스트리에 활성화된 토큰인 경우에만 ID를 추출하여 Registry에서 삭제
+            if (jwtTokenProvider.validateToken(refreshToken) && jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
               String username = jwtTokenProvider.getUsername(refreshToken);
               DiscodeitUserDetails userDetails = (DiscodeitUserDetails) userDetailsService.loadUserByUsername(username);
 
-              // 요구하신 대로 ByUserId 메서드를 활용해 무효화
               jwtRegistry.invalidateJwtInformationByUserId(userDetails.getUserDto().id());
             }
           });

@@ -39,7 +39,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     DiscodeitUserDetails userDetails = (DiscodeitUserDetails) authentication.getPrincipal();
     String username = userDetails.getUsername();
 
-    // 권한 정보 가져오기 (예시)
+    // 권한 정보 가져오기
     String role = authentication.getAuthorities().iterator().next().getAuthority();
 
     // 2. JwtTokenProvider를 이용해 토큰 생성

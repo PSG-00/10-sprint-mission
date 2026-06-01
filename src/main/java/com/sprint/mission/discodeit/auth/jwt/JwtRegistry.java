@@ -20,7 +20,7 @@ public interface JwtRegistry {
   boolean hasActiveJwtInformationByRefreshToken(String refreshToken);
 
   // 6. 토큰 로테이션
-  void rotateJwtInformation(UUID userId, JwtInformation newInfo);
+  void rotateJwtInformation(String refreshToken, JwtInformation newInfo);
 
   // 7. 만료된 토큰 정리
   void clearExpiredJwtInformation();
