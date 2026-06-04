@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.dto.MessageDto;
 import com.sprint.mission.discodeit.dto.PageResponse;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
+import io.micrometer.core.annotation.Timed;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -27,7 +28,7 @@ public class MessageController implements MessageApi {
     private final BinaryContentService binaryContentService;
 
     @Override
-    @ResponseStatus(HttpStatus.CREATED)
+    @Timed("message.create.async")
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MessageDto.Response> createMessage(
             @RequestPart("messageCreateRequest") @Valid MessageDto.CreateRequest request,

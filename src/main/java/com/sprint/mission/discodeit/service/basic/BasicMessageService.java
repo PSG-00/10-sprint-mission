@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.MessageDto;
 import com.sprint.mission.discodeit.dto.PageResponse;
 import com.sprint.mission.discodeit.entity.*;
+import com.sprint.mission.discodeit.event.notification.MessageCreatedEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.message.MessageAccessDeniedException;
@@ -14,6 +15,7 @@ import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class BasicMessageService implements MessageService {
     private final ReadStatusRepository readStatusRepository;
     private final MessageMapper messageMapper;
     private final PageResponseMapper pageResponseMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     @Override
@@ -80,6 +83,7 @@ public class BasicMessageService implements MessageService {
         log.info("[Message Created] ID: {}, Author: {}, Channel: {}, Type: {}, Attachments: {}",
                 savedMessage.getId(), author.getUsername(), channel.getId(), channel.getType(), attachments.size());
 
+        eventPublisher.publishEvent(new MessageCreatedEvent(savedMessage.getId()));
         return messageMapper.toResponse(savedMessage);
     }
 

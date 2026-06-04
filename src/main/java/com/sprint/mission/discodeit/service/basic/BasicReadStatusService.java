@@ -82,7 +82,7 @@ public class BasicReadStatusService implements ReadStatusService {
         ReadStatus readStatus = readStatusRepository.findById(readStatusId)
                 .orElseThrow(() -> ReadStatusNotFoundException.withId(readStatusId));
 
-        readStatus.update(request.newLastReadAt());
+        readStatus.update(request.newLastReadAt(), request.newNotificationEnabled());
 
         return readStatusMapper.toResponse(readStatus);
     }

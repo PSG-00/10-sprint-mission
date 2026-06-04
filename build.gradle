@@ -52,6 +52,13 @@ dependencies {
     // 6. Test Environment (테스트 관련)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // 7. Retry (고가용성)
+    implementation 'org.springframework.retry:spring-retry'
+
+    // 8. Cache (Caffeine)
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
 }
 
 test {

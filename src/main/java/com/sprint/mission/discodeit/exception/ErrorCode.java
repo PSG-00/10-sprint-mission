@@ -25,6 +25,10 @@ public enum ErrorCode {
     MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE_001", "해당 메시지를 찾을 수 없습니다"),
     MESSAGE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "MESSAGE_002", "메시지를 전송할 수 없습니다"),
 
+    // Notification
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "해당 알림을 찾을 수 없습니다."),
+    NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "NOTIFICATION_002", "본인의 알림만 삭제할 수 있습니다."),
+
     // BinaryContent
     BINARY_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "BINARY_CONTENT_001", "해당 파일을 찾을 수 없습니다"),
 

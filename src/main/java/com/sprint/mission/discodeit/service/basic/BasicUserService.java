@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.event.notification.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.etc.DatabaseConflictException;
 import com.sprint.mission.discodeit.exception.etc.InternalServerException;
@@ -16,6 +17,9 @@ import com.sprint.mission.discodeit.service.AuthService;
 import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,7 +44,9 @@ public class BasicUserService implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final ChannelRepository channelRepository;
     private final AuthService authService;
+    private final ApplicationEventPublisher eventPublisher;
 
+    @CacheEvict(value = "usersCache", allEntries = true)
     @Override
     @Transactional
     public UserDto.Response create(UserDto.CreateRequest request, UUID profileId) {
@@ -54,6 +60,7 @@ public class BasicUserService implements UserService {
         return toDto(user);
     }
 
+    @CacheEvict(value = "usersCache", allEntries = true)
     @Override
     @Transactional
     public void createAdmin(String username, String email, String rawPassword) {
@@ -73,9 +80,13 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> UserNotFoundException.withId(userId));
 
+        Role oldRole = user.getRole();
+
         user.updateRole(newRole);
 
         authService.expireUserSessions(userId);
+
+        eventPublisher.publishEvent(new RoleUpdatedEvent(user.getId(), oldRole, newRole));
 
         return toDto(user);
     }
@@ -91,6 +102,7 @@ public class BasicUserService implements UserService {
         return response;
     }
 
+    @Cacheable(value = "usersCache")
     @Override
     public List<UserDto.Response> findAll() {
         List<UserDto.Response> users = userRepository.findAll().stream()

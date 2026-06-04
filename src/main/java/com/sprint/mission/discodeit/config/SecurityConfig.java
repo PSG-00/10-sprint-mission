@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.config;
 
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.auth.handler.DiscodeitAccessDeniedHandler;
@@ -64,11 +65,14 @@ public class SecurityConfig {
 
             // 시스템 및 개발 도구 전용 엔드포인트
             .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-            .requestMatchers("/actuator/**").hasRole("ADMIN")
+            .requestMatchers("/actuator/**").permitAll()//.hasRole("ADMIN")
             .requestMatchers(toH2Console()).permitAll()
 
             // 인증/회원 관련 API
             .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
+            .requestMatchers(antMatcher(HttpMethod.GET, "/api/binaryContents/**")).permitAll()
+            .requestMatchers(antMatcher(HttpMethod.GET, "/api/binaryContents/**/download")).permitAll()
+            .requestMatchers(antMatcher(HttpMethod.OPTIONS, "/api/binaryContents/**/download")).permitAll()
             .requestMatchers(HttpMethod.POST,
                 "/api/users",
                 "/api/auth/login",

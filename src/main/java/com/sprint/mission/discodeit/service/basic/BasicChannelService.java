@@ -15,6 +15,8 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ public class BasicChannelService implements ChannelService {
     private final ChannelMapper channelMapper;
     private final UserMapper userMapper;
 
+    @CacheEvict(value = "userChannelsCache", key = "#userId")
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Transactional
     public ChannelDto.Response create(ChannelDto.PublicChannelCreateRequest request) {
@@ -43,6 +46,7 @@ public class BasicChannelService implements ChannelService {
         return toDto(savedChannel);
     }
 
+    @CacheEvict(value = "userChannelsCache", key = "#userId")
     @Transactional
     public ChannelDto.Response create(ChannelDto.PrivateChannelCreateRequest request) {
         List<User> participants = userRepository.findAllById(request.participantIds());
@@ -88,6 +92,7 @@ public class BasicChannelService implements ChannelService {
         return response;
     }
 
+    @Cacheable(value = "userChannelsCache", key = "#userId")
     @Override
     public List<ChannelDto.Response> findAllByUserId(UUID userId) {
         if (!userRepository.existsById(userId)) {
@@ -107,6 +112,7 @@ public class BasicChannelService implements ChannelService {
         return toDtos(channels);
     }
 
+    @CacheEvict(value = "userChannelsCache", key = "#userId")
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Override
     @Transactional
@@ -124,6 +130,7 @@ public class BasicChannelService implements ChannelService {
         return toDto(channel);
     }
 
+    @CacheEvict(value = "userChannelsCache", key = "#userId")
     @PreAuthorize("hasRole('CHANNEL_MANAGER')")
     @Override
     @Transactional

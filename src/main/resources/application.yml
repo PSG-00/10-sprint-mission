@@ -57,6 +57,9 @@ management:
    info:
      env:
        enabled: true # 환경 변수 정보를 info에 포함하도록 설정
+   observations:
+     annotations:
+       enabled: true
 
  # Actuator info에 노출될 애플리케이션 정보
 info:
