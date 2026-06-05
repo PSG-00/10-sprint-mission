@@ -19,6 +19,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 사용자 관련 요청을 처리하는 컨트롤러 클래스입니다.
+ */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -29,62 +32,44 @@ public class UserController implements UserApi {
     private final BinaryContentService binaryContentService;
 
     @Override
-    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserDto.Response> createUser(
-            @RequestPart("userCreateRequest") @Valid UserDto.CreateRequest request,
-            @RequestPart(value = "profile", required = false) MultipartFile profile) {
-        UserDto.Response response = userService.create(request, uploadProfile(profile));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<UserDto.Response> createUser(UserDto.CreateRequest request, MultipartFile profile) {
+        UUID profileId = uploadProfile(profile);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request, profileId));
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.PATCH, value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserDto.Response> updateUser(
-            @PathVariable("userId") UUID userId,
-            @RequestPart("userUpdateRequest") @Valid UserDto.UpdateRequest request,
-            @RequestPart(value = "profile", required = false) MultipartFile profile) {
-        UserDto.Response response = userService.update(userId, request, uploadProfile(profile));
-        return ResponseEntity.ok(response);
+    public ResponseEntity<UserDto.Response> updateUser(UUID userId, UserDto.UpdateRequest request, MultipartFile profile) {
+        UUID profileId = uploadProfile(profile);
+        return ResponseEntity.ok(userService.update(userId, request, profileId));
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("userId") UUID userId) {
+    public ResponseEntity<Void> deleteUser(UUID userId) {
         userService.delete(userId);
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.GET, value = "/{userId}")
-    public ResponseEntity<UserDto.Response> findUser(@PathVariable("userId") UUID userId) {
-        UserDto.Response response = userService.find(userId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<UserDto.Response> findUser(UUID userId) {
+        return ResponseEntity.ok(userService.find(userId));
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<UserDto.Response>> findAllUser() {
-        List<UserDto.Response> response = userService.findAll();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(userService.findAll());
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.PATCH, value = "/{userId}/userStatus")
-    public ResponseEntity<UserStatusDto.Response> patchUserStatus(
-            @PathVariable("userId") UUID userId,
-            @RequestBody @Valid UserStatusDto.UpdateRequest request) {
-        UserStatusDto.Response response = userStatus.updateByUserId(userId, request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<UserStatusDto.Response> patchUserStatus(UUID userId, UserStatusDto.UpdateRequest request) {
+        return ResponseEntity.ok(userStatus.updateByUserId(userId, request));
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.PUT, value = "/{userId}/role")
-    public ResponseEntity<UserDto.Response> updateUserRole(
-        @PathVariable("userId") UUID userId,
-        @RequestBody @Valid UserRoleUpdateRequest request) {
-        UserDto.Response response = userService.updateRole(userId, request.newRole());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<UserDto.Response> updateUserRole(UUID userId, UserRoleUpdateRequest request) {
+        return ResponseEntity.ok(userService.updateRole(userId, request.newRole()));
     }
+
+    // --- Private Helpers ---
 
     private UUID uploadProfile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -95,7 +80,6 @@ public class UserController implements UserApi {
             throw InvalidFileTypeException.imageOnly(file.getContentType());
         }
 
-        return binaryContentService.create(binaryContentService.multipartFileToCreateRequest(file))
-                .id();
+        return binaryContentService.create(binaryContentService.multipartFileToCreateRequest(file)).id();
     }
 }

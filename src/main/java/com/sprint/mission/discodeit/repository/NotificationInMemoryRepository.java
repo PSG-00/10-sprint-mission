@@ -14,7 +14,7 @@ public class NotificationInMemoryRepository {
 
   // 알림 저장
   public void save(NotificationDto notification) {
-    storage.computeIfAbsent(notification.receiveId(), k -> new ConcurrentHashMap<>())
+    storage.computeIfAbsent(notification.receiverId(), k -> new ConcurrentHashMap<>())
         .put(notification.id(), notification);
   }
 
