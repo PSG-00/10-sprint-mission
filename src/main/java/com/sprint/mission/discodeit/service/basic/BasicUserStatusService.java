@@ -3,7 +3,7 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.UserStatusDto;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.event.*;
+import com.sprint.mission.discodeit.event.UserEvents;
 import com.sprint.mission.discodeit.exception.etc.InternalServerException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.exception.userstatus.UserStatusAlreadyExistsException;
@@ -63,7 +63,7 @@ public class BasicUserStatusService implements UserStatusService {
             UserStatus savedStatus = userStatusRepository.saveAndFlush(userStatus);
             log.info("[UserStatus] 신규 상태 정보 생성: UserId={}", userId);
             
-            eventPublisher.publishEvent(new UserStatusUpdatedEvent(userId));
+            eventPublisher.publishEvent(new UserEvents.StatusUpdated(userId));
             return userStatusMapper.toResponse(savedStatus);
         } catch (DataIntegrityViolationException e) {
             // 레이스 컨디션 발생 시 기존 데이터 조회하여 반환
@@ -141,7 +141,7 @@ public class BasicUserStatusService implements UserStatusService {
         userStatusRepository.delete(userStatus);
         log.info("[UserStatus] 상태 정보 삭제: ID={}, UserId={}", userStatusId, userStatus.getUser().getId());
         
-        eventPublisher.publishEvent(new UserStatusUpdatedEvent(userStatus.getUser().getId()));
+        eventPublisher.publishEvent(new UserEvents.StatusUpdated(userStatus.getUser().getId()));
     }
 
     // --- Private Helpers ---
@@ -152,7 +152,7 @@ public class BasicUserStatusService implements UserStatusService {
         
         log.debug("[UserStatus] 활동 시간 업데이트: UserId={}", userStatus.getUser().getId());
         
-        eventPublisher.publishEvent(new UserStatusUpdatedEvent(userStatus.getUser().getId()));
+        eventPublisher.publishEvent(new UserEvents.StatusUpdated(userStatus.getUser().getId()));
         return userStatusMapper.toResponse(updatedStatus);
     }
 

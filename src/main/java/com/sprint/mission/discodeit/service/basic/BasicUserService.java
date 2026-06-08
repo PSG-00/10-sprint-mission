@@ -5,7 +5,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.event.*;
+import com.sprint.mission.discodeit.event.ChannelEvents;
+import com.sprint.mission.discodeit.event.UserEvents;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.etc.DatabaseConflictException;
 import com.sprint.mission.discodeit.exception.etc.InternalServerException;
@@ -62,7 +63,7 @@ public class BasicUserService implements UserService {
         
         log.info("[User] 신규 사용자 생성 완료: ID={}, Username={}, Email={}", user.getId(), user.getUsername(), user.getEmail());
         
-        eventPublisher.publishEvent(new UserUpdatedEvent(user.getId()));
+        eventPublisher.publishEvent(new UserEvents.Updated(user.getId()));
         
         return toDto(user);
     }
@@ -79,7 +80,7 @@ public class BasicUserService implements UserService {
     public void createAdmin(String username, String email, String rawPassword) {
         User admin = createNewUser(username, email, rawPassword, null, Role.ADMIN);
         log.info("[User] 관리자 계정 생성 완료: Username={}", username);
-        eventPublisher.publishEvent(new UserUpdatedEvent(admin.getId()));
+        eventPublisher.publishEvent(new UserEvents.Updated(admin.getId()));
     }
 
     /**
@@ -101,8 +102,8 @@ public class BasicUserService implements UserService {
 
         log.info("[User] 사용자 권한 변경: ID={}, Role={} -> {}", userId, oldRole, newRole);
 
-        eventPublisher.publishEvent(new RoleUpdatedEvent(user.getId(), oldRole, newRole));
-        eventPublisher.publishEvent(new UserUpdatedEvent(user.getId()));
+        eventPublisher.publishEvent(new UserEvents.RoleUpdated(user.getId(), oldRole, newRole));
+        eventPublisher.publishEvent(new UserEvents.Updated(user.getId()));
 
         return toDto(user);
     }
@@ -167,7 +168,7 @@ public class BasicUserService implements UserService {
             User updatedUser = userRepository.saveAndFlush(user);
             log.info("[User] 사용자 정보 수정 완료: ID={}, Username={}", userId, updatedUser.getUsername());
             
-            eventPublisher.publishEvent(new UserUpdatedEvent(userId));
+            eventPublisher.publishEvent(new UserEvents.Updated(userId));
             
             return toDto(updatedUser);
         } catch (DataIntegrityViolationException e) {
@@ -204,8 +205,8 @@ public class BasicUserService implements UserService {
         log.info("[User] 사용자 삭제 완료: ID={}, Username={}", userId, user.getUsername());
         
         // 4. 이벤트 발행: 본인 및 영향받은 다른 참여자들의 캐시 무효화
-        eventPublisher.publishEvent(new UserUpdatedEvent(userId)); // usersCache 비우기
-        affectedUserIds.forEach(id -> eventPublisher.publishEvent(new UserChannelAccessChangedEvent(id)));
+        eventPublisher.publishEvent(new UserEvents.Updated(userId)); // usersCache 비우기
+        affectedUserIds.forEach(id -> eventPublisher.publishEvent(new ChannelEvents.AccessChanged(id)));
     }
 
     // --- Private Helpers ---

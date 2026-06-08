@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.event.listener.notification;
 
-import com.sprint.mission.discodeit.event.MessageCreatedEvent;
-import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
-import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentEvents;
+import com.sprint.mission.discodeit.event.MessageEvents;
+import com.sprint.mission.discodeit.event.UserEvents;
 import com.sprint.mission.discodeit.service.NotificationEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,19 +24,19 @@ public class NotificationListener {
 
   @Async("ioTaskExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  public void handleMessageCreated(MessageCreatedEvent event) {
+  public void handleMessageCreated(MessageEvents.Created event) {
     notificationEventService.sendByMessageCreated(event.messageId());
   }
 
   @Async("ioTaskExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  public void handleRoleUpdated(RoleUpdatedEvent event) {
+  public void handleRoleUpdated(UserEvents.RoleUpdated event) {
     notificationEventService.sendByRoleUpdated(event.userId(), event.oldRole(), event.newRole());
   }
 
   @Async("ioTaskExecutor")
   @EventListener
-  public void handleS3UploadFailed(S3UploadFailedEvent event) {
+  public void handleS3UploadFailed(BinaryContentEvents.S3UploadFailed event) {
     notificationEventService.sendS3UploadFailedNotification(
         event.binaryContentId(), 
         event.mdcRequestId(), 

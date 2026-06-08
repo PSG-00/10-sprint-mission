@@ -59,7 +59,7 @@ public class BasicChannelService implements ChannelService {
         log.info("[Channel] 공개 채널 생성 완료: ID={}, Name={}", savedChannel.getId(), savedChannel.getName());
         
         // 캐시 무효화 및 부가 처리를 위한 이벤트 발행
-        eventPublisher.publishEvent(new ChannelCreatedEvent(savedChannel.getId(), ChannelType.PUBLIC, List.of()));
+        eventPublisher.publishEvent(new ChannelEvents.Created(savedChannel.getId(), ChannelType.PUBLIC, List.of()));
         
         return toDto(savedChannel);
     }
@@ -96,7 +96,7 @@ public class BasicChannelService implements ChannelService {
         log.info("[Channel] 비공개 채널 생성 완료: ID={}, Participants={}", savedChannel.getId(), participants.size());
 
         // 비공개 채널의 경우 참여자들의 캐시만 만료시키도록 이벤트 발행
-        eventPublisher.publishEvent(new ChannelCreatedEvent(savedChannel.getId(), ChannelType.PRIVATE, request.participantIds()));
+        eventPublisher.publishEvent(new ChannelEvents.Created(savedChannel.getId(), ChannelType.PRIVATE, new ArrayList<>(request.participantIds())));
 
         return toDto(savedChannel);
     }
@@ -165,7 +165,7 @@ public class BasicChannelService implements ChannelService {
         
         log.info("[Channel] 채널 정보 수정 완료: ID={}, NewName={}", channelId, request.newName());
 
-        eventPublisher.publishEvent(new ChannelUpdatedEvent(channelId, ChannelType.PUBLIC));
+        eventPublisher.publishEvent(new ChannelEvents.Updated(channelId, ChannelType.PUBLIC));
 
         return toDto(channel);
     }
@@ -198,7 +198,7 @@ public class BasicChannelService implements ChannelService {
 
         // 캐시 무효화 이벤트 발행
         // 만약 비공개 채널인데 참여자가 0명으로 조회되었다면 안전을 위해 전체 캐시 무효화(fallback) 시도 가능
-        eventPublisher.publishEvent(new ChannelDeletedEvent(channelId, type, participantIds));
+        eventPublisher.publishEvent(new ChannelEvents.Deleted(channelId, type, participantIds));
     }
 
     // --- Private Helpers ---

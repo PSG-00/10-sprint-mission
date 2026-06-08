@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.event.listener.binaryContent;
 
 import com.sprint.mission.discodeit.entity.BinaryContentStatus;
-import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentEvents;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class BinaryContentListener {
 
   @Async("ioTaskExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  public void handleBinaryContentCreated(BinaryContentCreatedEvent event) {
+  public void handleBinaryContentCreated(BinaryContentEvents.Created event) {
     try {
       binaryContentStorage.put(event.binaryContentId(), event.bytes());
       binaryContentService.updateStatus(event.binaryContentId(), BinaryContentStatus.SUCCESS);

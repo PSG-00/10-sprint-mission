@@ -74,7 +74,7 @@ public class BasicMessageService implements MessageService {
                 savedMessage.getId(), author.getUsername(), channel.getId());
 
         // 알림 및 부가 처리를 위한 이벤트 발행
-        eventPublisher.publishEvent(new MessageCreatedEvent(savedMessage.getId()));
+        eventPublisher.publishEvent(new MessageEvents.Created(savedMessage.getId()));
         
         return messageMapper.toResponse(savedMessage);
     }

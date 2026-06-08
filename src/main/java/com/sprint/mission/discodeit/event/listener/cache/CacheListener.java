@@ -1,7 +1,8 @@
 package com.sprint.mission.discodeit.event.listener.cache;
 
 import com.sprint.mission.discodeit.entity.ChannelType;
-import com.sprint.mission.discodeit.event.*;
+import com.sprint.mission.discodeit.event.ChannelEvents;
+import com.sprint.mission.discodeit.event.UserEvents;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
@@ -21,7 +22,7 @@ public class CacheListener {
     private final CacheManager cacheManager;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleChannelCreated(ChannelCreatedEvent event) {
+    public void handleChannelCreated(ChannelEvents.Created event) {
         if (event.type() == ChannelType.PUBLIC) {
             evictAll("userChannelsCache");
         } else {
@@ -30,14 +31,14 @@ public class CacheListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleChannelUpdated(ChannelUpdatedEvent event) {
+    public void handleChannelUpdated(ChannelEvents.Updated event) {
         if (event.type() == ChannelType.PUBLIC) {
             evictAll("userChannelsCache");
         }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleChannelDeleted(ChannelDeletedEvent event) {
+    public void handleChannelDeleted(ChannelEvents.Deleted event) {
         if (event.type() == ChannelType.PUBLIC || event.participantIds().isEmpty()) {
             // 공개 채널이거나 참여자 정보가 없는 경우 안전하게 전체 비우기
             evictAll("userChannelsCache");
@@ -50,19 +51,19 @@ public class CacheListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleUserUpdated(UserUpdatedEvent event) {
+    public void handleUserUpdated(UserEvents.Updated event) {
         evictAll("usersCache");
         evictAll("userChannelsCache"); // 참여자 정보 동기화를 위해 채널 캐시도 초기화
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleUserStatusUpdated(UserStatusUpdatedEvent event) {
+    public void handleUserStatusUpdated(UserEvents.StatusUpdated event) {
         evictAll("usersCache");
         evictAll("userChannelsCache"); // 상태 정보 동기화를 위해 채널 캐시도 초기화
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleUserChannelAccessChanged(UserChannelAccessChangedEvent event) {
+    public void handleUserChannelAccessChanged(ChannelEvents.AccessChanged event) {
         evictSpecificUsers("userChannelsCache", java.util.List.of(event.userId()));
         log.info("[CacheListener] 사용자({})의 접근 권한 변경으로 채널 캐시 무효화", event.userId());
     }

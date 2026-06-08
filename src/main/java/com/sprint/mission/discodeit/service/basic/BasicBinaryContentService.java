@@ -73,7 +73,7 @@ public class BasicBinaryContentService implements BinaryContentService {
         log.info("[BinaryContent] 메타데이터 저장 완료 (PROCESSING): ID={}, Name={}", savedContent.getId(), savedContent.getFileName());
 
         // 실제 파일 저장을 위한 이벤트 발행 (S3/로컬 저장소 등에서 비동기 처리)
-        eventPublisher.publishEvent(new BinaryContentCreatedEvent(savedContent.getId(), request.bytes()));
+        eventPublisher.publishEvent(new BinaryContentEvents.Created(savedContent.getId(), request.bytes()));
 
         return binaryContentMapper.toResponse(savedContent);
     }

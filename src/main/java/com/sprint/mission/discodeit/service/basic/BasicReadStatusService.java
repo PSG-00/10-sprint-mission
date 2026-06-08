@@ -4,7 +4,7 @@ import com.sprint.mission.discodeit.dto.ReadStatusDto;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.event.UserChannelAccessChangedEvent;
+import com.sprint.mission.discodeit.event.ChannelEvents;
 import com.sprint.mission.discodeit.exception.etc.InternalServerException;
 import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -61,7 +61,7 @@ public class BasicReadStatusService implements ReadStatusService {
                 .orElseGet(() -> {
                     ReadStatusDto.Response response = saveNewReadStatus(user, channel, request.lastReadAt());
                     // 접근 권한(채널 목록) 변경 알림
-                    eventPublisher.publishEvent(new UserChannelAccessChangedEvent(userId));
+                    eventPublisher.publishEvent(new ChannelEvents.AccessChanged(userId));
                     return response;
                 });
     }
@@ -118,7 +118,7 @@ public class BasicReadStatusService implements ReadStatusService {
         log.info("[ReadStatus] 상태 삭제: ID={}", readStatusId);
         
         // 접근 권한(채널 목록) 변경 알림
-        eventPublisher.publishEvent(new UserChannelAccessChangedEvent(userId));
+        eventPublisher.publishEvent(new ChannelEvents.AccessChanged(userId));
     }
 
     // --- Private Helpers ---

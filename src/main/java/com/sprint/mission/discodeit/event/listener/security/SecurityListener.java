@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.event.listener.security;
 
-import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
+import com.sprint.mission.discodeit.event.UserEvents;
 import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ public class SecurityListener {
     private final AuthService authService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleRoleUpdated(RoleUpdatedEvent event) {
+    public void handleRoleUpdated(UserEvents.RoleUpdated event) {
         log.info("[SecurityListener] 권한 변경으로 인한 세션 만료 처리: UserId={}", event.userId());
         authService.expireUserSessions(event.userId());
     }

@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.storage.s3;
 
 import com.sprint.mission.discodeit.config.AwsProperties;
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
-import com.sprint.mission.discodeit.event.S3UploadFailedEvent;
+import com.sprint.mission.discodeit.event.BinaryContentEvents;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.etc.S3DownloadException;
 import com.sprint.mission.discodeit.exception.etc.S3UploadException;
@@ -118,7 +118,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
     }
 
     // ⭐️ 의존성 없이 이벤트만 발행합니다.
-    eventPublisher.publishEvent(new S3UploadFailedEvent(mdcRequestId, uuid, e.getMessage()));
+    eventPublisher.publishEvent(new BinaryContentEvents.S3UploadFailed(uuid, mdcRequestId, e.getMessage()));
 
     throw handleWriteException(uuid, e);
   }
