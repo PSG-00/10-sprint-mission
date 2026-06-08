@@ -22,7 +22,6 @@ spring:
       mode: embedded # H2 같은 내장 DB일 때만 초기화 스크립트 실행
 
   cache:
-    type: caffeine
     cache-names:
       - usersCache
       - userChannelsCache
@@ -32,6 +31,12 @@ spring:
         maximumSize=100,
         expireAfterAccess=600s,
         recordStats
+    redis:
+      enable-statistics: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 server:
   tomcat:

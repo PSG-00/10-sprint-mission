@@ -52,11 +52,19 @@ public class CacheListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserUpdated(UserUpdatedEvent event) {
         evictAll("usersCache");
+        evictAll("userChannelsCache"); // 참여자 정보 동기화를 위해 채널 캐시도 초기화
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserStatusUpdated(UserStatusUpdatedEvent event) {
         evictAll("usersCache");
+        evictAll("userChannelsCache"); // 상태 정보 동기화를 위해 채널 캐시도 초기화
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleUserChannelAccessChanged(UserChannelAccessChangedEvent event) {
+        evictSpecificUsers("userChannelsCache", java.util.List.of(event.userId()));
+        log.info("[CacheListener] 사용자({})의 접근 권한 변경으로 채널 캐시 무효화", event.userId());
     }
 
     private void evictAll(String cacheName) {

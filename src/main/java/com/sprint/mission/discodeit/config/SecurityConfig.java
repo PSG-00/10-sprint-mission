@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.config;
 
-import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
@@ -58,14 +57,14 @@ public class SecurityConfig {
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-            .ignoringRequestMatchers(toH2Console())
+            .ignoringRequestMatchers(antMatcher("/h2-console/**"))
         )
 
         // 2. 인가 규칙: 정적 리소스 및 일부 공용 API는 전체 허용, 나머지는 인증 필수
         .authorizeHttpRequests(auth -> auth
             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
             .requestMatchers("/actuator/**").permitAll()
-            .requestMatchers(toH2Console()).permitAll()
+            .requestMatchers(antMatcher("/h2-console/**")).permitAll()
             .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/binaryContents/*").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users", "/api/auth/login", "/api/auth/refresh").permitAll()

@@ -4,9 +4,8 @@ import com.sprint.mission.discodeit.dto.ReadStatusDto;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.event.UserChannelAccessChangedEvent;
 import com.sprint.mission.discodeit.exception.etc.InternalServerException;
-import com.sprint.mission.discodeit.exception.readstatus.ReadStatusAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
@@ -16,13 +15,13 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 /**
@@ -37,6 +36,7 @@ public class BasicReadStatusService implements ReadStatusService {
     private final UserRepository userRepository;
     private final ChannelRepository channelRepository;
     private final ReadStatusMapper readStatusMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 새로운 읽기 상태를 생성합니다.
@@ -54,11 +54,16 @@ public class BasicReadStatusService implements ReadStatusService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> UserNotFoundException.withId(userId));
         Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> ChannelNotFoundException.withId(channelId));
+                .orElseThrow(() -> com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException.withId(channelId));
 
         return readStatusRepository.findByUserIdAndChannelId(userId, channelId)
                 .map(readStatusMapper::toResponse)
-                .orElseGet(() -> saveNewReadStatus(user, channel, request.lastReadAt()));
+                .orElseGet(() -> {
+                    ReadStatusDto.Response response = saveNewReadStatus(user, channel, request.lastReadAt());
+                    // 접근 권한(채널 목록) 변경 알림
+                    eventPublisher.publishEvent(new UserChannelAccessChangedEvent(userId));
+                    return response;
+                });
     }
 
     /**
@@ -107,8 +112,13 @@ public class BasicReadStatusService implements ReadStatusService {
         ReadStatus readStatus = readStatusRepository.findById(readStatusId)
                 .orElseThrow(() -> ReadStatusNotFoundException.withId(readStatusId));
 
+        UUID userId = readStatus.getUser().getId();
         readStatusRepository.delete(readStatus);
+        
         log.info("[ReadStatus] 상태 삭제: ID={}", readStatusId);
+        
+        // 접근 권한(채널 목록) 변경 알림
+        eventPublisher.publishEvent(new UserChannelAccessChangedEvent(userId));
     }
 
     // --- Private Helpers ---

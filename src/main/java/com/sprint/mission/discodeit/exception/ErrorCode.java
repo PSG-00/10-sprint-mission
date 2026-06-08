@@ -20,6 +20,7 @@ public enum ErrorCode {
     CHANNEL_NOT_FOUND(HttpStatus.NOT_FOUND, "CHANNEL_001", "해당 채널을 찾을 수 없습니다."),
     INVALID_PRIVATE_CHANNEL_CREATED(HttpStatus.BAD_REQUEST, "CHANNEL_002", "비공개 채널의 참여자 수는 2명 이상이어야 합니다"),
     INVALID_PRIVATE_CHANNEL_MODIFIED(HttpStatus.BAD_REQUEST, "CHANNEL_003", "비공개 채널은 수정할 수 없습니다"),
+    PRIVATE_CHANNEL_ALREADY_EXISTS(HttpStatus.CONFLICT, "CHANNEL_004", "이미 동일한 구성원의 비공개 채널이 존재합니다."),
 
     // Message
     MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE_001", "해당 메시지를 찾을 수 없습니다"),

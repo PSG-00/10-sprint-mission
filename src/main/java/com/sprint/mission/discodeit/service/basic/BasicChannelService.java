@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.*;
 import com.sprint.mission.discodeit.event.*;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.channel.PrivateChannelAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelParticipantException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelUpdateNotAllowedException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -73,6 +74,16 @@ public class BasicChannelService implements ChannelService {
     @Transactional
     public ChannelDto.Response create(ChannelDto.PrivateChannelCreateRequest request) {
         List<User> participants = validateAndGetParticipants(request.participantIds());
+
+        // 중복 체크: 이미 동일한 구성원의 비공개 채널이 존재하는지 확인
+        List<Channel> existingChannels = channelRepository.findPrivateChannelByParticipants(
+            request.participantIds(), 
+            (long) request.participantIds().size()
+        );
+
+        if (!existingChannels.isEmpty()) {
+            throw PrivateChannelAlreadyExistsException.withParticipantIds(new HashSet<>(request.participantIds()));
+        }
 
         Channel channel = new Channel(ChannelType.PRIVATE, null, null);
         Channel savedChannel = channelRepository.save(channel);

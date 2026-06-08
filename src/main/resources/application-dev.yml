@@ -3,6 +3,9 @@ spring:
     activate:
       on-profile: dev
 
+  cache:
+    type: caffeine
+
   h2:
     console:
       enabled: true      # H2 콘솔 활성화

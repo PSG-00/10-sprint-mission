@@ -27,9 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 사용자 관련 비즈니스 로직을 처리하는 기본 서비스 클래스입니다.
@@ -176,11 +175,6 @@ public class BasicUserService implements UserService {
         }
     }
 
-    /**
-     * 사용자를 삭제하고 관련 데이터를 정리합니다.
-     *
-     * @param userId 삭제할 사용자 ID
-     */
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN') or principal.userDto.id == #userId")
@@ -188,18 +182,30 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> UserNotFoundException.withId(userId));
 
+        // 1. 삭제 전, 이 사용자가 참여 중인 모든 비공개 채널의 '다른' 참여자들을 수집
+        // (사용자가 삭제되면 비공개 채널이 사라지거나 멤버 목록이 변하므로 다른 참여자들의 캐시도 비워야 함)
         List<UUID> myChannelIds = readStatusRepository.findChannelIdsByUserId(userId);
+        Set<UUID> affectedUserIds = new HashSet<>();
+        if (!myChannelIds.isEmpty()) {
+            affectedUserIds = readStatusRepository.findAllByChannelIdsWithUser(myChannelIds).stream()
+                    .map(rs -> rs.getUser().getId())
+                    .filter(id -> !id.equals(userId))
+                    .collect(Collectors.toSet());
+        }
 
+        // 2. 유저 삭제 (ReadStatus 등 CASCADE 삭제됨)
         userRepository.delete(user);
 
-        // 사용자가 나간 후 참여자가 없는 채널 정리
+        // 3. 참여자가 없는 채널 정리
         if (!myChannelIds.isEmpty()) {
             channelRepository.deleteEmptyOrLonelyChannels(myChannelIds);
         }
 
         log.info("[User] 사용자 삭제 완료: ID={}, Username={}", userId, user.getUsername());
         
-        eventPublisher.publishEvent(new UserUpdatedEvent(userId));
+        // 4. 이벤트 발행: 본인 및 영향받은 다른 참여자들의 캐시 무효화
+        eventPublisher.publishEvent(new UserUpdatedEvent(userId)); // usersCache 비우기
+        affectedUserIds.forEach(id -> eventPublisher.publishEvent(new UserChannelAccessChangedEvent(id)));
     }
 
     // --- Private Helpers ---
