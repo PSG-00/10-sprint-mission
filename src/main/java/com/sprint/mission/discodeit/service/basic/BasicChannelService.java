@@ -165,7 +165,7 @@ public class BasicChannelService implements ChannelService {
         
         log.info("[Channel] 채널 정보 수정 완료: ID={}, NewName={}", channelId, request.newName());
 
-        eventPublisher.publishEvent(new ChannelEvents.Updated(channelId, ChannelType.PUBLIC));
+        eventPublisher.publishEvent(new ChannelEvents.Updated(channelId, ChannelType.PUBLIC, List.of()));
 
         return toDto(channel);
     }

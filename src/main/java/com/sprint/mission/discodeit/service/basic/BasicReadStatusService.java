@@ -64,7 +64,7 @@ public class BasicReadStatusService implements ReadStatusService {
                     eventPublisher.publishEvent(new ChannelEvents.AccessChanged(userId));
                     return response;
                 });
-    }
+        }
 
     /**
      * 읽기 상태 정보를 ID로 조회합니다.
@@ -100,6 +100,9 @@ public class BasicReadStatusService implements ReadStatusService {
         log.debug("[ReadStatus] 상태 업데이트: ID={}, UserId={}, ChannelId={}", 
                 readStatusId, readStatus.getUser().getId(), readStatus.getChannel().getId());
 
+        // 캐시 무효화 (알림 설정/읽기 시간 변경 반영)
+        eventPublisher.publishEvent(new ChannelEvents.AccessChanged(readStatus.getUser().getId()));
+
         return readStatusMapper.toResponse(readStatus);
     }
 
@@ -114,9 +117,9 @@ public class BasicReadStatusService implements ReadStatusService {
 
         UUID userId = readStatus.getUser().getId();
         readStatusRepository.delete(readStatus);
-        
+
         log.info("[ReadStatus] 상태 삭제: ID={}", readStatusId);
-        
+
         // 접근 권한(채널 목록) 변경 알림
         eventPublisher.publishEvent(new ChannelEvents.AccessChanged(userId));
     }

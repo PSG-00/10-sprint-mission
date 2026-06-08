@@ -34,6 +34,8 @@ public class CacheListener {
     public void handleChannelUpdated(ChannelEvents.Updated event) {
         if (event.type() == ChannelType.PUBLIC) {
             evictAll("userChannelsCache");
+        } else {
+            evictSpecificUsers("userChannelsCache", event.participantIds());
         }
     }
 

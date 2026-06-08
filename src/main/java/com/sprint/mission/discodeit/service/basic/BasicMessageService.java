@@ -76,6 +76,12 @@ public class BasicMessageService implements MessageService {
         // 알림 및 부가 처리를 위한 이벤트 발행
         eventPublisher.publishEvent(new MessageEvents.Created(savedMessage.getId()));
         
+        // 캐시 무효화 (채널 목록의 lastMessageAt 동기화)
+        List<UUID> participantIds = (channel.getType() == ChannelType.PRIVATE)
+                ? readStatusRepository.findParticipantIdsByChannelId(channel.getId())
+                : List.of();
+        eventPublisher.publishEvent(new ChannelEvents.Updated(channel.getId(), channel.getType(), participantIds));
+        
         return messageMapper.toResponse(savedMessage);
     }
 
@@ -152,6 +158,12 @@ public class BasicMessageService implements MessageService {
 
         channel.updateLastMessageAt(latestMessageAt);
         log.info("[Message] 메시지 삭제 완료: ID={}", messageId);
+
+        // 캐시 무효화 (채널 목록의 lastMessageAt 동기화)
+        List<UUID> participantIds = (channel.getType() == ChannelType.PRIVATE)
+                ? readStatusRepository.findParticipantIdsByChannelId(channel.getId())
+                : List.of();
+        eventPublisher.publishEvent(new ChannelEvents.Updated(channel.getId(), channel.getType(), participantIds));
     }
 
     // --- Private Helpers ---
