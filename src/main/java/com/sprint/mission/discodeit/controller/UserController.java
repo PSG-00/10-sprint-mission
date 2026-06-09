@@ -4,14 +4,12 @@ import com.sprint.mission.discodeit.controller.api.UserApi;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.UserStatusDto;
-import com.sprint.mission.discodeit.exception.etc.InvalidFileTypeException;
-import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
+import com.sprint.mission.discodeit.service.facade.UserFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,18 +27,16 @@ public class UserController implements UserApi {
 
     private final UserService userService;
     private final UserStatusService userStatus;
-    private final BinaryContentService binaryContentService;
+    private final UserFacade userFacade;
 
     @Override
     public ResponseEntity<UserDto.Response> createUser(UserDto.CreateRequest request, MultipartFile profile) {
-        UUID profileId = uploadProfile(profile);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request, profileId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userFacade.createUser(request, profile));
     }
 
     @Override
     public ResponseEntity<UserDto.Response> updateUser(UUID userId, UserDto.UpdateRequest request, MultipartFile profile) {
-        UUID profileId = uploadProfile(profile);
-        return ResponseEntity.ok(userService.update(userId, request, profileId));
+        return ResponseEntity.ok(userFacade.updateUser(userId, request, profile));
     }
 
     @Override
@@ -67,19 +63,5 @@ public class UserController implements UserApi {
     @Override
     public ResponseEntity<UserDto.Response> updateUserRole(UUID userId, UserRoleUpdateRequest request) {
         return ResponseEntity.ok(userService.updateRole(userId, request.newRole()));
-    }
-
-    // --- Private Helpers ---
-
-    private UUID uploadProfile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return null;
-        }
-
-        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
-            throw InvalidFileTypeException.imageOnly(file.getContentType());
-        }
-
-        return binaryContentService.create(binaryContentService.multipartFileToCreateRequest(file)).id();
     }
 }

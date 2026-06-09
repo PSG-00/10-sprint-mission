@@ -3,15 +3,14 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.controller.api.MessageApi;
 import com.sprint.mission.discodeit.dto.MessageDto;
 import com.sprint.mission.discodeit.dto.PageResponse;
-import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
+import com.sprint.mission.discodeit.service.facade.MessageFacade;
 import io.micrometer.core.annotation.Timed;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,13 +28,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MessageController implements MessageApi {
     private final MessageService messageService;
-    private final BinaryContentService binaryContentService;
+    private final MessageFacade messageFacade;
 
     @Override
     @Timed("message.create.async")
     public ResponseEntity<MessageDto.Response> createMessage(MessageDto.CreateRequest request, List<MultipartFile> files) {
-        List<UUID> attachmentIds = uploadMessageFiles(files);
-        return ResponseEntity.status(HttpStatus.CREATED).body(messageService.create(request, attachmentIds));
+        return ResponseEntity.status(HttpStatus.CREATED).body(messageFacade.createMessage(request, files));
     }
 
     @Override
@@ -57,15 +55,5 @@ public class MessageController implements MessageApi {
     @Override
     public ResponseEntity<PageResponse<MessageDto.Response>> findAllByChannelId(UUID channelId, Instant cursor, Pageable pageable) {
         return ResponseEntity.ok(messageService.findAllByChannelId(channelId, cursor, pageable));
-    }
-
-    // --- Private Helpers ---
-
-    private List<UUID> uploadMessageFiles(List<MultipartFile> files) {
-        if (files == null || files.isEmpty()) return List.of();
-
-        return files.stream()
-                .map(file -> binaryContentService.create(binaryContentService.multipartFileToCreateRequest(file)).id())
-                .toList();
     }
 }
