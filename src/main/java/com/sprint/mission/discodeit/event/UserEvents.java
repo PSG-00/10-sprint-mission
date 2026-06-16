@@ -6,7 +6,9 @@ import java.util.UUID;
 public final class UserEvents {
     private UserEvents() {}
 
+    public record Created(UUID userId) {}
     public record Updated(UUID userId) {}
+    public record Deleted(UUID userId) {}
     public record StatusUpdated(UUID userId) {}
     public record RoleUpdated(UUID userId, Role oldRole, Role newRole) {}
 }
