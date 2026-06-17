@@ -26,101 +26,92 @@ public class BasicSseService implements SseService {
 
     @Override
     public SseEmitter connect(UUID receiverId, UUID lastEventId) {
-        // 새로운 연결 전에 해당 유저의 죽은 연결들 미리 정리
-        List<SseEmitter> existingEmitters = sseEmitterRepository.findAllByUserId(receiverId);
-        if (!existingEmitters.isEmpty()) {
-            existingEmitters.removeIf(emitter -> !ping(emitter));
-        }
 
+        // 새 Emitter 생성
         SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
 
         emitter.onTimeout(() -> sseEmitterRepository.remove(receiverId, emitter));
         emitter.onError((e) -> sseEmitterRepository.remove(receiverId, emitter));
         emitter.onCompletion(() -> sseEmitterRepository.remove(receiverId, emitter));
 
+        // 저장소 등록
         sseEmitterRepository.add(receiverId, emitter);
-
-        // 유실 복원 처리
-        if (lastEventId != null) {
-            List<SseMessage> missedMessages = sseMessageRepository.findAllByReceiverIdAndAfterId(receiverId, lastEventId);
-            missedMessages.forEach(msg -> sendToClient(emitter, msg.eventName(), msg));
-        }
 
         // 초기 연결 확인용 ping
         ping(emitter);
 
-        int userConnectionCount = sseEmitterRepository.findAllByUserId(receiverId).size();
-        int totalEmitterCount = sseEmitterRepository.findAll().values().stream()
-                .mapToInt(Collection::size)
-                .sum();
+        // 유실 복원 처리
+        if (lastEventId != null) {
+            List<SseMessage> missedMessages = sseMessageRepository.findAllByReceiverIdAndAfterId(receiverId, lastEventId);
+            missedMessages.forEach(msg -> sendToClient(emitter, msg));
+        }
 
-        log.info("[SSE] 신규 연결 등록: UserId={}, 유저별연결수={}, 전체에미터수={}", 
-                receiverId, userConnectionCount, totalEmitterCount);
+        log.info("[SSE] 신규 연결 등록: UserId={}", receiverId);
         return emitter;
     }
 
     @Override
     public void send(Collection<UUID> receiverIds, String eventName, Object data) {
+        // DB에 메세지 저장
         SseMessage message = sseMessageRepository.save(receiverIds, eventName, data);
 
-        receiverIds.stream()
-                .map(sseEmitterRepository::findAllByUserId)
-                .flatMap(Collection::stream)
-                .parallel()
-                .forEach(emitter -> sendToClient(emitter, eventName, message));
+        // 대상자들에게 순차 전송
+        for (UUID receiverId : receiverIds) {
+            sseEmitterRepository.findAllByUserId(receiverId)
+                    .forEach(emitter -> sendToClient(emitter, message));
+        }
     }
 
     @Override
     public void broadcast(String eventName, Object data) {
-        SseMessage message = sseMessageRepository.save(java.util.List.of(), eventName, data);
+        // DB에 메세지 저장
+        SseMessage message = sseMessageRepository.save(List.of(), eventName, data);
 
-        sseEmitterRepository.findAll().values().stream()
-                .flatMap(Collection::stream)
-                .parallel()
-                .forEach(emitter -> sendToClient(emitter, eventName, message));
+        // 전체 에미터에게 전송
+        sseEmitterRepository.findAllEmitters()
+                .forEach(emitter -> sendToClient(emitter, message));
     }
 
     @Scheduled(fixedDelay = 1000 * 45) // 45초마다 점검
     @Override
     public void cleanUp() {
         log.info("[SSE] 연결 상태 점검 시작...");
-        sseEmitterRepository.findAll().forEach((userId, emitters) -> {
+
+        sseEmitterRepository.findAll().entrySet().removeIf(entry -> {
+            List<SseEmitter> emitters = entry.getValue();
+
+            // 해당 유저의 에미터 중 연결이 끊긴 것들 제거
             emitters.removeIf(emitter -> !ping(emitter));
+
+            // 만약 에미터가 하나도 남지 않았다면 해당 유저(Key) 자체를 맵에서 삭제
+            return emitters.isEmpty();
         });
+
         log.info("[SSE] 연결 상태 점검 완료.");
     }
 
-    private boolean ping(SseEmitter sseEmitter) {
+    private boolean ping(SseEmitter emitter) {
         try {
-            sseEmitter.send(SseEmitter.event()
+            emitter.send(SseEmitter.event()
                     .name("ping")
                     .data("keep-alive"));
             return true;
         } catch (IOException e) {
+            emitter.complete();
             return false;
         }
     }
 
-    private void sendToClient(SseEmitter emitter, String eventName, Object data) {
+    private void sendToClient(SseEmitter emitter, SseMessage message) {
         try {
-            SseEmitter.SseEventBuilder eventBuilder = SseEmitter.event()
-                    .name(eventName);
-
-            if (data instanceof SseMessage sseMessage) {
-                eventBuilder.id(sseMessage.id().toString());
-                eventBuilder.data(sseMessage.data());
-            } else {
-                eventBuilder.data(data);
-            }
-
-            emitter.send(eventBuilder);
-            log.debug("[SSE] 전송 성공: Event={}", eventName);
+            emitter.send(SseEmitter.event()
+                    .id(message.id().toString())
+                    .name(message.eventName())
+                    .data(message.data()));
+            log.debug("[SSE] 전송 성공: MessageId={}", message.id());
         } catch (IOException e) {
-            log.warn("[SSE] 전송 실패 (연결 끊김): Event={}, Error={}", eventName, e.getMessage());
-            emitter.complete();
-        } catch (Exception e) {
-            log.error("[SSE] 알 수 없는 전송 에러: Event={}, Error={}", eventName, e.getMessage(), e);
-            emitter.complete();
+            log.warn("[SSE] 전송 실패 (연결 끊김): MessageId={}", message.id());
+            emitter.complete(); // 실패 시 명시적으로 종료 처리하여 자원 해제
         }
     }
 }

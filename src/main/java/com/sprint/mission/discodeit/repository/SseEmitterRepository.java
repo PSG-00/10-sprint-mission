@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 @Repository
 public class SseEmitterRepository {
@@ -20,6 +21,10 @@ public class SseEmitterRepository {
 
     public List<SseEmitter> findAllByUserId(UUID receiverId) {
         return data.getOrDefault(receiverId, List.of());
+    }
+
+    public List<SseEmitter> findAllEmitters() {
+        return data.values().stream().flatMap(List::stream).toList();
     }
 
     public Map<UUID, List<SseEmitter>> findAll() {

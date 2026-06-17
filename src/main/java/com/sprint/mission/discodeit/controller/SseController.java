@@ -14,6 +14,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.UUID;
 
+import org.springframework.web.bind.annotation.RequestParam;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/sse")
@@ -24,7 +26,7 @@ public class SseController {
     @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<SseEmitter> connect(
             @AuthenticationPrincipal DiscodeitUserDetails userDetails,
-            @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "") String lastEventId
+            @RequestParam(value = "lastEventId", required = false, defaultValue = "") String lastEventId
     ) {
         UUID userId = userDetails.getUserDto().id();
         UUID lastEventIdUuid = null;
