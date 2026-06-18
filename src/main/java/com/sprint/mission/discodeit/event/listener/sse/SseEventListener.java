@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.event.*;
 import com.sprint.mission.discodeit.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -30,7 +31,6 @@ public class SseEventListener {
     private final UserService userService;
 
     /* --- 1. 알림 관련 이벤트 --- */
-
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(NotificationEvents.Created event) {
         log.info("[SSE] 알림 생성 이벤트 수신: ID={}", event.notificationId());
@@ -41,7 +41,6 @@ public class SseEventListener {
 
 
     /* --- 2. 파일(BinaryContent) 관련 이벤트 --- */
-
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(BinaryContentEvents.Updated event) {
         log.info("[SSE] 파일 상태 변경 이벤트 수신: ID={}", event.binaryContentId());
@@ -51,7 +50,6 @@ public class SseEventListener {
     }
 
     /* --- 3. 채널 관련 이벤트 --- */
-
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(ChannelEvents.Created event) {
         log.info("[SSE] 채널 생성 이벤트 수신: ID={}, Type={}", event.id(), event.type());
@@ -88,7 +86,6 @@ public class SseEventListener {
     }
 
     /* --- 4. 사용자 관련 이벤트 --- */
-
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserEvents.Created event) {
         log.info("[SSE] 사용자 생성 이벤트 수신: ID={}", event.userId());
@@ -112,9 +109,9 @@ public class SseEventListener {
         sseService.broadcast("users.deleted", event.userId());
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(UserEvents.StatusUpdated event) {
-        log.info("[SSE] 사용자 상태 변경 이벤트 수신: ID={}", event.userId());
+    @EventListener
+    public void on(UserEvents.OnlineStatusChanged event) {
+        log.info("[SSE] 사용자 온라인 상태 변경 이벤트 수신: ID={}, Online={}", event.userId(), event.online());
         
         UserDto.Response user = userService.find(event.userId());
         sseService.broadcast("users.updated", user);

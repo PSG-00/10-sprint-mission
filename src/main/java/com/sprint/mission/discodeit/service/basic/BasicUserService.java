@@ -4,7 +4,6 @@ import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.event.ChannelEvents;
 import com.sprint.mission.discodeit.event.UserEvents;
 import com.sprint.mission.discodeit.exception.etc.DatabaseConflictException;
@@ -164,7 +163,6 @@ public class BasicUserService implements UserService {
                 : null;
 
         User user = new User(username, email, encodedPassword, profile, role);
-        user.setStatus(new UserStatus(user, Instant.now()));
 
         try {
             return userRepository.saveAndFlush(user);
@@ -186,10 +184,6 @@ public class BasicUserService implements UserService {
     }
 
     private UserDto.Response toDto(User user) {
-        if (user.getStatus() == null) {
-            log.error("[Data Integrity] 유저 상태 정보 누락: ID={}", user.getId());
-            throw InternalServerException.dataIntegrity("유저(ID: %s)의 상태 정보가 누락되었습니다.", user.getId());
-        }
         return userMapper.toResponse(user);
     }
 }

@@ -9,6 +9,6 @@ public final class UserEvents {
     public record Created(UUID userId) {}
     public record Updated(UUID userId) {}
     public record Deleted(UUID userId) {}
-    public record StatusUpdated(UUID userId) {}
     public record RoleUpdated(UUID userId, Role oldRole, Role newRole) {}
+    public record OnlineStatusChanged(UUID userId, boolean online) {}
 }
