@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.ChannelEvents;
@@ -45,8 +46,10 @@ public class BasicUserService implements UserService {
     public UserDto.Response create(UserDto.CreateRequest request, UUID profileId) {
         User user = createNewUser(request.username(), request.email(), request.password(), profileId, Role.USER);
         log.info("[User] 신규 사용자 생성 완료: ID={}, Username={}, Email={}", user.getId(), user.getUsername(), user.getEmail());
-        eventPublisher.publishEvent(new UserEvents.Created(user.getId()));
-        return toDto(user);
+
+        UserDto.Response createdUser = toDto(user);
+        eventPublisher.publishEvent(new UserEvents.Created(createdUser));
+        return createdUser;
     }
 
     @Override
@@ -54,7 +57,7 @@ public class BasicUserService implements UserService {
     public void createAdmin(String username, String email, String rawPassword) {
         User admin = createNewUser(username, email, rawPassword, null, Role.ADMIN);
         log.info("[User] 관리자 계정 생성 완료: Username={}", username);
-        eventPublisher.publishEvent(new UserEvents.Created(admin.getId()));
+        eventPublisher.publishEvent(new UserEvents.Created(toDto(admin)));
     }
 
     @Override
@@ -69,10 +72,11 @@ public class BasicUserService implements UserService {
 
         log.info("[User] 사용자 권한 변경: ID={}, Role={} -> {}", userId, oldRole, newRole);
 
+        UserDto.Response updatedUser = toDto(user);
         eventPublisher.publishEvent(new UserEvents.RoleUpdated(user.getId(), oldRole, newRole));
-        eventPublisher.publishEvent(new UserEvents.Updated(user.getId()));
+        eventPublisher.publishEvent(new UserEvents.Updated(updatedUser));
 
-        return toDto(user);
+        return updatedUser;
     }
 
     @Override
@@ -113,9 +117,11 @@ public class BasicUserService implements UserService {
         
         log.info("[User] 사용자 정보 수정 완료: ID={}, Username={}", userId, user.getUsername());
 
-        eventPublisher.publishEvent(new UserEvents.Updated(user.getId()));
 
-        return toDto(user);
+        UserDto.Response updatedUser = toDto(user);
+        eventPublisher.publishEvent(new UserEvents.Updated(updatedUser));
+
+        return updatedUser;
     }
 
 
@@ -126,11 +132,13 @@ public class BasicUserService implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> UserNotFoundException.withId(userId));
 
+        UserDto.Response deletedUser = toDto(user);
+
         // 1. 삭제될 비공개 채널과 알림 대상자(상대방)를 한 번에 조회
         List<ChannelEvents.Deleted> deletionEvents = readStatusRepository.findAffectedPrivateChannelInfo(userId).stream()
                 .map(row -> new ChannelEvents.Deleted(
                         (UUID) row[0], 
-                        com.sprint.mission.discodeit.entity.ChannelType.PRIVATE, 
+                        ChannelType.PRIVATE,
                         List.of((UUID) row[1])
                 ))
                 .toList();
@@ -150,7 +158,7 @@ public class BasicUserService implements UserService {
         log.info("[User] 사용자 삭제 완료: ID={}, DeletedPrivateChannels={}", userId, deletionEvents.size());
         
         // 5. 정합성 및 실시간성 보장을 위한 이벤트 발행
-        eventPublisher.publishEvent(new UserEvents.Deleted(userId)); // 전체 유저 목록 갱신 및 본인 캐시 무효화
+        eventPublisher.publishEvent(new UserEvents.Deleted(deletedUser)); // 전체 유저 목록 갱신 및 본인 캐시 무효화
         deletionEvents.forEach(eventPublisher::publishEvent); // 상대방들에게 채널 삭제 실시간 알림 및 캐시 무효화
     }
 

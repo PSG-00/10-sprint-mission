@@ -7,12 +7,15 @@ import com.sprint.mission.discodeit.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -22,6 +25,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class SseEventListener {
 
     private final SseService sseService;
@@ -36,7 +40,7 @@ public class SseEventListener {
         log.info("[SSE] 알림 생성 이벤트 수신: ID={}", event.notificationId());
 
         NotificationDto notification = notificationService.find(event.notificationId());
-        sseService.send(java.util.List.of(event.receiverId()), "notifications.created", notification);
+        sseService.send(List.of(event.receiverId()), "notifications.created", notification);
     }
 
 
@@ -79,34 +83,32 @@ public class SseEventListener {
         log.info("[SSE] 채널 삭제 이벤트 수신: ID={}, Type={}", event.id(), event.type());
         
         if (event.type() == ChannelType.PUBLIC) {
-            sseService.broadcast("channels.deleted", event.id());
+            sseService.broadcast("channels.deleted", Map.of("id", event.id()));
         } else {
-            sseService.send(event.participantIds(), "channels.deleted", event.id());
+            sseService.send(event.participantIds(), "channels.deleted", Map.of("id", event.id()));
         }
     }
 
     /* --- 4. 사용자 관련 이벤트 --- */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserEvents.Created event) {
-        log.info("[SSE] 사용자 생성 이벤트 수신: ID={}", event.userId());
-        
-        UserDto.Response user = userService.find(event.userId());
-        sseService.broadcast("users.created", user);
+        log.info("[SSE] 사용자 생성 이벤트 수신: ID={}", event.user().id());
+
+        sseService.broadcast("users.created", event.user());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserEvents.Updated event) {
-        log.info("[SSE] 사용자 수정 이벤트 수신: ID={}", event.userId());
-        
-        UserDto.Response user = userService.find(event.userId());
-        sseService.broadcast("users.updated", user);
+        log.info("[SSE] 사용자 수정 이벤트 수신: ID={}", event.user().id());
+
+        sseService.broadcast("users.updated", event.user());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserEvents.Deleted event) {
-        log.info("[SSE] 사용자 삭제 이벤트 수신: ID={}", event.userId());
+        log.info("[SSE] 사용자 삭제 이벤트 수신: ID={}", event.user().id());
         
-        sseService.broadcast("users.deleted", event.userId());
+        sseService.broadcast("users.deleted", Map.of("id", event.user().id()));
     }
 
     @EventListener

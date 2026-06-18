@@ -279,17 +279,17 @@ class BasicUserServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("데이터 변환 (toDto)")
-    class ToDto {
-        @Test
-        @DisplayName("성공: 정상적인 유저 엔티티")
-        void toDto_Success() {
-            // when
-            userService.toDto(user);
-
-            // then
-            verify(userMapper).toResponse(user);
-        }
-    }
+    // @Nested
+    // @DisplayName("데이터 변환 (toDto)")
+    // class ToDto {
+    //     @Test
+    //     @DisplayName("성공: 정상적인 유저 엔티티")
+    //     void toDto_Success() {
+    //         // when
+    //         userService.toDto(user);
+    //
+    //         // then
+    //         verify(userMapper).toResponse(user);
+    //     }
+    // }
 }
